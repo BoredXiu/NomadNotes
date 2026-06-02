@@ -7,18 +7,8 @@ import { v4 as uuidv4 } from "uuid";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-let potrace = null;
-try {
-	const potraceModule = await import("potrace");
-	potrace = potraceModule;
-} catch (e) {
-	console.warn("potrace 未安装，图片矢量化功能将不可用");
-}
-
 const tmpImagesDir = join(__dirname, "..", "..", "uploads", "tmp", "images");
-const tmpVectorsDir = join(__dirname, "..", "..", "uploads", "tmp", "vectors");
 const imagesDir = join(__dirname, "..", "..", "uploads", "images");
-const vectorsDir = join(__dirname, "..", "..", "uploads", "vectors");
 
 function ensureDir(dir) {
 	if (!fs.existsSync(dir)) {
@@ -26,9 +16,8 @@ function ensureDir(dir) {
 	}
 }
 
-async function vectorizeAndSaveTemp(imagePath, originalFilename) {
+async function saveToTemp(imagePath, originalFilename) {
 	ensureDir(tmpImagesDir);
-	ensureDir(tmpVectorsDir);
 
 	const fileId = uuidv4();
 	const ext = originalFilename.substring(originalFilename.lastIndexOf("."));
@@ -37,57 +26,27 @@ async function vectorizeAndSaveTemp(imagePath, originalFilename) {
 
 	fs.copyFileSync(imagePath, imageDestPath);
 
-	let vectorUrl = null;
-	if (potrace) {
-		try {
-			const svg = await new Promise((resolve, reject) => {
-				potrace.trace(imageDestPath, (err, svg) => {
-					if (err) reject(err);
-					else resolve(svg);
-				});
-			});
-			const svgFilename = fileId + ".svg";
-			const svgDestPath = join(tmpVectorsDir, svgFilename);
-			fs.writeFileSync(svgDestPath, svg);
-			vectorUrl = "/uploads/tmp/vectors/" + svgFilename;
-		} catch (error) {
-			console.error("矢量化失败:", imageFilename, error.message);
-		}
-	}
-
 	return {
 		fileId,
 		imageUrl: "/uploads/tmp/images/" + imageFilename,
-		vectorUrl,
+		ext,
 	};
 }
 
 async function moveFromTmpToPermanent(fileId, originalExt) {
 	ensureDir(imagesDir);
-	ensureDir(vectorsDir);
 
 	const tmpImagePath = join(tmpImagesDir, fileId + originalExt);
-	const permanentImageName = fileId + originalExt;
-	const permanentImagePath = join(imagesDir, permanentImageName);
-	const imageUrl = "/uploads/images/" + permanentImageName;
-
-	let vectorUrl = null;
 
 	if (fs.existsSync(tmpImagePath)) {
+		const permanentImageName = fileId + originalExt;
+		const permanentImagePath = join(imagesDir, permanentImageName);
 		fs.copyFileSync(tmpImagePath, permanentImagePath);
 		fs.unlinkSync(tmpImagePath);
+		return { imageUrl: "/uploads/images/" + permanentImageName };
 	}
 
-	const tmpSvgPath = join(tmpVectorsDir, fileId + ".svg");
-	if (fs.existsSync(tmpSvgPath)) {
-		const permanentSvgName = fileId + ".svg";
-		const permanentSvgPath = join(vectorsDir, permanentSvgName);
-		fs.copyFileSync(tmpSvgPath, permanentSvgPath);
-		fs.unlinkSync(tmpSvgPath);
-		vectorUrl = "/uploads/vectors/" + permanentSvgName;
-	}
-
-	return { imageUrl, vectorUrl };
+	return { imageUrl: "/uploads/tmp/images/" + fileId + originalExt };
 }
 
 function cleanupTmpDir() {
@@ -97,13 +56,11 @@ function cleanupTmpDir() {
 	let cleanedCount = 0;
 	const errors = [];
 
-	for (const dir of [tmpImagesDir, tmpVectorsDir]) {
-		if (!fs.existsSync(dir)) continue;
-
-		const files = fs.readdirSync(dir);
+	if (fs.existsSync(tmpImagesDir)) {
+		const files = fs.readdirSync(tmpImagesDir);
 		for (const file of files) {
 			try {
-				const filePath = join(dir, file);
+				const filePath = join(tmpImagesDir, file);
 				fs.unlinkSync(filePath);
 				cleanedCount++;
 			} catch (error) {
@@ -120,4 +77,4 @@ function cleanupTmpDir() {
 	}
 }
 
-export { vectorizeAndSaveTemp, moveFromTmpToPermanent, cleanupTmpDir };
+export { saveToTemp, moveFromTmpToPermanent, cleanupTmpDir };

@@ -1,14 +1,14 @@
 import React from 'react';
-import { Layout, Menu, Button, Typography, Space, Avatar } from 'antd';
+import { Layout, Tabs, Button, Typography, Space, Avatar } from 'antd';
 import {
   LogoutOutlined,
-  GlobalOutlined,
   PlusOutlined,
   UserOutlined,
   CompassOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { NomadLogoIcon, MyTripIcon } from './NomadIcons';
 
 const { Header, Content } = Layout;
 const { Text } = Typography;
@@ -23,16 +23,29 @@ export default function AppLayout() {
     navigate('/login');
   };
 
-  const menuItems = [
+  const activeKey = (() => {
+    if (location.pathname === '/') return '/';
+    if (location.pathname.startsWith('/explore')) return '/explore';
+    if (location.pathname.startsWith('/trip')) return '/';
+    return '';
+  })();
+
+  const tabItems = [
     {
       key: '/',
-      icon: <GlobalOutlined />,
-      label: '我的旅程',
+      label: (
+        <span>
+          <MyTripIcon size={14} /> 我的旅程
+        </span>
+      ),
     },
     {
       key: '/explore',
-      icon: <CompassOutlined />,
-      label: '微游记',
+      label: (
+        <span>
+          <CompassOutlined /> 微游记
+        </span>
+      ),
     },
   ];
 
@@ -48,7 +61,7 @@ export default function AppLayout() {
         }}
       >
         <Space>
-          <GlobalOutlined style={{ color: '#fff', fontSize: 20 }} />
+          <NomadLogoIcon size={22} color="#fff" />
           <Text strong style={{ color: '#fff', fontSize: 18 }}>
             NomadNotes
           </Text>
@@ -86,12 +99,11 @@ export default function AppLayout() {
         </Space>
       </Header>
 
-      <Menu
-        mode="horizontal"
-        selectedKeys={[location.pathname]}
-        items={menuItems}
-        onClick={({ key }) => navigate(key)}
-        style={{ padding: '0 24px' }}
+      <Tabs
+        activeKey={activeKey}
+        onChange={(key) => navigate(key)}
+        items={tabItems}
+        style={{ padding: '0 24px', marginBottom: 0 }}
       />
 
       <Content

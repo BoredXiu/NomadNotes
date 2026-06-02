@@ -49,5 +49,8 @@ yarn-error.log*
 *.swo
 *~
 
+images/
+tmp/
+vectors/
 .claude/
 conversation_log.md

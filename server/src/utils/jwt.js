@@ -1,32 +1,23 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
 function generateAccessToken(userId) {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '15m',
-  });
+	return jwt.sign({ userId }, process.env.JWT_SECRET, {
+		expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m",
+	});
 }
 
 function generateRefreshToken(userId) {
-  return jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
-  });
+	return jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, {
+		expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
+	});
 }
 
 function verifyAccessToken(token) {
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET);
-  } catch (err) {
-    return null;
-  }
+	return jwt.verify(token, process.env.JWT_SECRET);
 }
 
 function verifyRefreshToken(token) {
-  return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+	return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 }
 
-export {
-  generateAccessToken,
-  generateRefreshToken,
-  verifyAccessToken,
-  verifyRefreshToken,
-};
+export { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken };

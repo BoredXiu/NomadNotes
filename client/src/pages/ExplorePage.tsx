@@ -4,19 +4,18 @@ import {
   Typography,
   Pagination,
   Tag,
-  Avatar,
   Empty,
   Space,
 } from 'antd';
 import {
   EnvironmentOutlined,
   CalendarOutlined,
-  UserOutlined,
 } from '@ant-design/icons';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { getPublicTrips, getPublicTripById } from '../api/trips';
+import { getPublicTrips } from '../api/trips';
+import { useAuthStore } from '../store/authStore';
 import { CardListSkeleton } from '../components/Skeletons';
 import type { Trip } from '../types';
 
@@ -26,19 +25,15 @@ export default function ExplorePage() {
   const [page, setPage] = useState(1);
   const pageSize = 9;
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const currentUserId = useAuthStore((s) => s.user?.id);
 
   const { data, isLoading } = useQuery({
     queryKey: ['publicTrips', page],
     queryFn: () => getPublicTrips({ page, pageSize }),
   });
 
-  const handlePrefetch = (tripId: string) => {
-    queryClient.prefetchQuery({
-      queryKey: ['publicTrip', tripId],
-      queryFn: () => getPublicTripById(tripId),
-      staleTime: 5 * 60 * 1000,
-    });
+  const handleCardClick = (tripId: string) => {
+    navigate(`/public-trip/${tripId}`);
   };
 
   return (
@@ -65,8 +60,7 @@ export default function ExplorePage() {
               <Card
                 key={trip.id}
                 hoverable
-                onClick={() => navigate(`/trip/${trip.id}`)}
-                onMouseEnter={() => handlePrefetch(trip.id)}
+                onClick={() => handleCardClick(trip.id)}
                 cover={
                   trip.coverImage ? (
                     <div
@@ -104,7 +98,14 @@ export default function ExplorePage() {
                 }
               >
                 <Card.Meta
-                  title={trip.title}
+                  title={
+                    <Space>
+                      {trip.title}
+                      {currentUserId && trip.userId === currentUserId && (
+                        <Tag color="orange">我的</Tag>
+                      )}
+                    </Space>
+                  }
                   description={
                     <div>
                       <Space
@@ -119,26 +120,15 @@ export default function ExplorePage() {
                         <Space>
                           <CalendarOutlined />
                           <Text type="secondary">
-                            {dayjs(trip.startDate).format('YYYY/MM/DD')} -{' '}
-                            {dayjs(trip.endDate).format('YYYY/MM/DD')}
+                            {dayjs(trip.startDate).format('YYYY-MM-DD HH:mm:ss')} -{' '}
+                            {dayjs(trip.endDate).format('YYYY-MM-DD HH:mm:ss')}
                           </Text>
                         </Space>
-                        {trip.User && (
-                          <Space style={{ marginTop: 8 }}>
-                            {trip.User.avatarUrl ? (
-                              <Avatar src={trip.User.avatarUrl} size={24} />
-                            ) : (
-                              <Avatar
-                                size={24}
-                                icon={<UserOutlined />}
-                                style={{ backgroundColor: '#1890ff' }}
-                              >
-                                {trip.User.username?.charAt(0).toUpperCase()}
-                              </Avatar>
-                            )}
-                            <Text type="secondary">{trip.User.username}</Text>
-                          </Space>
-                        )}
+                        <Space>
+                          <Text type="secondary">
+                            {trip.User?.username ? `@${trip.User.username}` : ''}
+                          </Text>
+                        </Space>
                         {trip.isEnded === 1 ? (
                           <Tag color="blue">已结束</Tag>
                         ) : (

@@ -22,6 +22,7 @@ export interface Trip {
 	expenseCount?: number;
 	noteCount?: number;
 	isOwner?: boolean;
+	notes?: Note[];
 	User?: { id: string; username: string; avatarUrl: string | null };
 }
 
@@ -46,7 +47,6 @@ export interface Note {
 	tripId: string;
 	content: string;
 	images: string[] | null;
-	vectorImages: string[] | null;
 	noteDate: string;
 	createdAt: string;
 }

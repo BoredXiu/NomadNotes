@@ -19,12 +19,8 @@ const Note = sequelize.define('Note', {
     type: DataTypes.JSON,
     allowNull: true,
   },
-  vectorImages: {
-    type: DataTypes.JSON,
-    allowNull: true,
-  },
   noteDate: {
-    type: DataTypes.DATEONLY,
+    type: DataTypes.DATE,
     allowNull: false,
   },
   createdAt: {

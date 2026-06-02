@@ -115,4 +115,55 @@ async function deleteExpense(expenseId, userId) {
 	return { message: "账单已删除" };
 }
 
-export { createExpense, getTripExpenses, getExpenseStats, deleteExpense };
+async function updateExpense(expenseId, userId, updateData) {
+	const expense = await Expense.findByPk(expenseId);
+	if (!expense) {
+		throw new AppError("账单不存在", 404);
+	}
+
+	const trip = await Trip.findByPk(expense.tripId);
+	if (!trip || trip.userId !== userId) {
+		throw new AppError("无权修改该账单", 403);
+	}
+
+	const allowedFields = ["category", "amount", "expenseDate", "note"];
+	const filteredData = {};
+	for (const key of allowedFields) {
+		if (updateData[key] !== undefined) {
+			filteredData[key] = updateData[key];
+		}
+	}
+
+	if (updateData.receiptImage !== undefined) {
+		if (expense.receiptImage && expense.receiptImage !== updateData.receiptImage) {
+			try {
+				const oldPath = join(__dirname, "..", "..", expense.receiptImage);
+				if (fs.existsSync(oldPath)) {
+					fs.unlinkSync(oldPath);
+				}
+			} catch (error) {
+				console.error("删除旧小票文件失败:", error.message);
+			}
+		}
+		filteredData.receiptImage = updateData.receiptImage;
+	}
+
+	await expense.update(filteredData);
+	return expense;
+}
+
+async function getExpenseById(expenseId, userId) {
+	const expense = await Expense.findByPk(expenseId);
+	if (!expense) {
+		throw new AppError("账单不存在", 404);
+	}
+
+	const trip = await Trip.findByPk(expense.tripId);
+	if (!trip || trip.userId !== userId) {
+		throw new AppError("无权查看该账单", 403);
+	}
+
+	return expense;
+}
+
+export { createExpense, getTripExpenses, getExpenseStats, deleteExpense, updateExpense, getExpenseById };

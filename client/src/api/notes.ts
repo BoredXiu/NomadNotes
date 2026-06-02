@@ -4,7 +4,7 @@ import type { ApiResponse, Note } from "../types";
 export interface TempFileResult {
 	fileId: string;
 	imageUrl: string;
-	vectorUrl: string | null;
+	ext: string;
 }
 
 export async function createNote(tripId: string, data: FormData): Promise<Note> {
@@ -40,4 +40,21 @@ export async function getTripNotes(tripId: string, params?: { sort?: string }): 
 
 export async function deleteNote(id: string): Promise<void> {
 	await api.delete(`/notes/${id}`);
+}
+
+export async function updateNote(id: string, data: { content?: string; noteDate?: string; tempFiles?: { fileId: string; ext: string }[] }): Promise<Note> {
+	const res = await api.patch<ApiResponse<Note>>(`/notes/${id}`, data);
+	return res.data.data;
+}
+
+export async function updateNoteFormData(id: string, formData: FormData): Promise<Note> {
+	const res = await api.patch<ApiResponse<Note>>(`/notes/${id}`, formData, {
+		headers: { "Content-Type": "multipart/form-data" },
+	});
+	return res.data.data;
+}
+
+export async function getNoteById(id: string): Promise<Note> {
+	const res = await api.get<ApiResponse<Note>>(`/notes/${id}`);
+	return res.data.data;
 }

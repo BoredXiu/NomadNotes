@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Tabs,
   Typography,
@@ -18,6 +18,9 @@ import {
   Breadcrumb,
   Segmented,
   Avatar,
+  Row,
+  Col,
+  Statistic,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -44,11 +47,18 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from 'recharts';
 
 const { Title, Text } = Typography;
 
 const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
+
+const NOTE_COLORS = ['#52c41a', '#1890ff', '#722ed1', '#fa8c16', '#eb2f96', '#13c2c2'];
 
 export default function TripDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -63,6 +73,52 @@ export default function TripDetailPage() {
   const user = useAuthStore((s) => s.user);
 
   const isOwner = trip?.isOwner !== false;
+
+  const dailyExpenseData = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const e of expenses) {
+      const date = dayjs(e.expenseDate).format('YYYY-MM-DD');
+      map[date] = (map[date] || 0) + Number(e.amount);
+    }
+    return Object.entries(map)
+      .map(([date, amount]) => ({ date, amount: Math.round(amount * 100) / 100 }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [expenses]);
+
+  const statsSummary = useMemo(() => {
+    const total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+    if (expenses.length === 0) return { total: 0, avgPerDay: 0, maxCategory: null, count: 0, noteCount: 0, totalImages: 0 };
+
+    const categoryTotals: Record<string, number> = {};
+    const dates = new Set<string>();
+    for (const e of expenses) {
+      categoryTotals[e.category] = (categoryTotals[e.category] || 0) + Number(e.amount);
+      dates.add(dayjs(e.expenseDate).format('YYYY-MM-DD'));
+    }
+
+    let maxCategory = '';
+    let maxAmount = 0;
+    for (const [cat, amt] of Object.entries(categoryTotals)) {
+      if (amt > maxAmount) {
+        maxAmount = amt;
+        maxCategory = cat;
+      }
+    }
+
+    let totalImages = 0;
+    for (const n of notes) {
+      totalImages += (n.images?.length || 0);
+    }
+
+    return {
+      total: Math.round(total * 100) / 100,
+      avgPerDay: dates.size > 0 ? Math.round((total / dates.size) * 100) / 100 : 0,
+      maxCategory: `${maxCategory} (¥${Math.round(maxAmount * 100) / 100})`,
+      count: expenses.length,
+      noteCount: notes.length,
+      totalImages,
+    };
+  }, [expenses, notes]);
 
   const fetchData = async () => {
     if (!id) return;
@@ -147,7 +203,7 @@ export default function TripDetailPage() {
       title: '日期',
       dataIndex: 'expenseDate',
       key: 'expenseDate',
-      render: (d: string) => dayjs(d).format('YYYY/MM/DD'),
+      render: (d: string) => dayjs(d).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
       title: '分类',
@@ -172,15 +228,41 @@ export default function TripDetailPage() {
       ellipsis: true,
     },
     {
+      title: '小票',
+      dataIndex: 'receiptImage',
+      key: 'receiptImage',
+      render: (img: string | null) =>
+        img ? (
+          <Image
+            src={img}
+            width={40}
+            height={40}
+            style={{ objectFit: 'cover', borderRadius: 4, cursor: 'pointer' }}
+            preview={{
+              mask: '查看',
+            }}
+          />
+        ) : (
+          <Text type="secondary">-</Text>
+        ),
+    },
+    {
       title: '操作',
       key: 'action',
       render: (_: unknown, record: Expense) => (
-        <Popconfirm
-          title="确定删除这条账单吗？"
-          onConfirm={() => handleDeleteExpense(record.id)}
-        >
-          <Button type="link" danger icon={<DeleteOutlined />} />
-        </Popconfirm>
+        <Space>
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => navigate(`/trip/${id}/expense/${record.id}/edit`)}
+          />
+          <Popconfirm
+            title="确定删除这条账单吗？"
+            onConfirm={() => handleDeleteExpense(record.id)}
+          >
+            <Button type="link" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
@@ -264,17 +346,24 @@ export default function TripDetailPage() {
                     title={
                       <Space>
                         <Text type="secondary">
-                          {dayjs(note.noteDate).format('YYYY/MM/DD')}
+                          {dayjs(note.noteDate).format('YYYY-MM-DD HH:mm:ss')}
                         </Text>
                       </Space>
                     }
                     extra={
-                      <Popconfirm
-                        title="确定删除这篇游记吗？"
-                        onConfirm={() => handleDeleteNote(note.id)}
-                      >
-                        <Button type="link" danger icon={<DeleteOutlined />} />
-                      </Popconfirm>
+                      <Space>
+                        <Button
+                          type="link"
+                          icon={<EditOutlined />}
+                          onClick={() => navigate(`/trip/${id}/note/${note.id}/edit`)}
+                        />
+                        <Popconfirm
+                          title="确定删除这篇游记吗？"
+                          onConfirm={() => handleDeleteNote(note.id)}
+                        >
+                          <Button type="link" danger icon={<DeleteOutlined />} />
+                        </Popconfirm>
+                      </Space>
                     }
                   >
                     <div
@@ -315,39 +404,185 @@ export default function TripDetailPage() {
       ),
       children: (
         <div>
-          {stats && stats.categories.length > 0 ? (
-            <div style={{ textAlign: 'center' }}>
-              <Title level={4}>
-                总支出：¥{stats.total.toFixed(2)}
-              </Title>
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={stats.categories}
-                    dataKey="total"
-                    nameKey="category"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={150}
-                    label={({ category, total }) =>
-                      `${category} ¥${total.toFixed(0)}`
-                    }
-                  >
-                    {stats.categories.map((_, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => `¥${value.toFixed(2)}`} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
+          {expenses.length > 0 || notes.length > 0 ? (
+            <>
+              <Row gutter={16} style={{ marginBottom: 24 }}>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="总支出"
+                      value={statsSummary.total}
+                      precision={2}
+                      prefix="¥"
+                      valueStyle={{ color: '#cf1322' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="日均支出"
+                      value={statsSummary.avgPerDay}
+                      precision={2}
+                      prefix="¥"
+                      valueStyle={{ color: '#1890ff' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="消费笔数"
+                      value={statsSummary.count}
+                      suffix="笔"
+                      valueStyle={{ color: '#722ed1' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="最高消费类别"
+                      value={statsSummary.maxCategory || '-'}
+                      valueStyle={{ fontSize: 16, color: '#fa8c16' }}
+                    />
+                  </Card>
+                </Col>
+              </Row>
+
+              <Row gutter={16} style={{ marginBottom: 24 }}>
+                <Col xs={24} sm={12} lg={8}>
+                  <Card>
+                    <Statistic
+                      title="游记篇数"
+                      value={statsSummary.noteCount}
+                      suffix="篇"
+                      valueStyle={{ color: '#52c41a' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={8}>
+                  <Card>
+                    <Statistic
+                      title="游记图片数"
+                      value={statsSummary.totalImages}
+                      suffix="张"
+                      valueStyle={{ color: '#13c2c2' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={8}>
+                  <Card>
+                    <Statistic
+                      title="游记配图率"
+                      value={statsSummary.noteCount > 0
+                        ? ((statsSummary.totalImages / statsSummary.noteCount)).toFixed(1)
+                        : '0.0'}
+                      suffix="张/篇"
+                      valueStyle={{ color: '#eb2f96' }}
+                    />
+                  </Card>
+                </Col>
+              </Row>
+
+              {stats && stats.categories.length > 0 && (
+                <Row gutter={16}>
+                  <Col xs={24} lg={12}>
+                    <Card title="消费分类分布" style={{ marginBottom: 16 }}>
+                      <ResponsiveContainer width="100%" height={350}>
+                        <PieChart>
+                          <Pie
+                            data={stats.categories}
+                            dataKey="total"
+                            nameKey="category"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={120}
+                            label={({ category, total }) =>
+                              `${category} ¥${total.toFixed(2)}`
+                            }
+                          >
+                            {stats.categories.map((_, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: number) => `¥${value.toFixed(2)}`} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </Card>
+                  </Col>
+                  <Col xs={24} lg={12}>
+                    <Card title="每日消费趋势" style={{ marginBottom: 16 }}>
+                      {dailyExpenseData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={350}>
+                          <BarChart data={dailyExpenseData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="date" />
+                            <YAxis />
+                            <Tooltip formatter={(value: number) => `¥${value.toFixed(2)}`} />
+                            <Bar dataKey="amount" fill="#1890ff" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <Empty description="暂无日消费数据" />
+                      )}
+                    </Card>
+                  </Col>
+                </Row>
+              )}
+
+              {stats && stats.categories.length > 0 && (
+                <Card title="分类明细" size="small" style={{ marginTop: 16 }}>
+                  <Table
+                    dataSource={stats.categories}
+                    rowKey="category"
+                    pagination={false}
+                    columns={[
+                      {
+                        title: '分类',
+                        dataIndex: 'category',
+                        render: (c: string) => <Tag>{c}</Tag>,
+                      },
+                      {
+                        title: '笔数',
+                        dataIndex: 'count',
+                        align: 'right',
+                      },
+                      {
+                        title: '金额',
+                        dataIndex: 'total',
+                        align: 'right',
+                        render: (v: number) => (
+                          <Text strong style={{ color: '#ff4d4f' }}>
+                            ¥{v.toFixed(2)}
+                          </Text>
+                        ),
+                      },
+                      {
+                        title: '占比',
+                        key: 'percent',
+                        align: 'right',
+                        render: (_: unknown, record: { total: number }) => {
+                          const pct = stats.total > 0
+                            ? ((record.total / stats.total) * 100).toFixed(1)
+                            : '0.0';
+                          return `${pct}%`;
+                        },
+                      },
+                    ]}
+                  />
+                </Card>
+              )}
+            </>
+          ) : expenses.length === 0 && notes.length === 0 ? (
+            <Empty description="暂无消费数据与游记数据" />
+          ) : expenses.length === 0 ? (
             <Empty description="暂无消费数据" />
-          )}
+          ) : null}
         </div>
       ),
     }] : []),
@@ -362,10 +597,10 @@ export default function TripDetailPage() {
         <Descriptions bordered column={1}>
           <Descriptions.Item label="目的地">{trip.destination}</Descriptions.Item>
           <Descriptions.Item label="开始日期">
-            {dayjs(trip.startDate).format('YYYY年MM月DD日')}
+            {dayjs(trip.startDate).format('YYYY-MM-DD HH:mm:ss')}
           </Descriptions.Item>
           <Descriptions.Item label="结束日期">
-            {dayjs(trip.endDate).format('YYYY年MM月DD日')}
+            {dayjs(trip.endDate).format('YYYY-MM-DD HH:mm:ss')}
           </Descriptions.Item>
           <Descriptions.Item label="状态">
             {trip.isEnded === 1 ? <Tag color="blue">已结束</Tag> : <Tag color="green">进行中</Tag>}

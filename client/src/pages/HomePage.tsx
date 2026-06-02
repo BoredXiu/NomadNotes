@@ -128,6 +128,8 @@ export default function HomePage() {
                   >
                     <DeleteOutlined
                       onClick={(e) => e.stopPropagation()}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = '#ff7875'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = ''; }}
                     />
                   </Popconfirm>,
                 ]}
@@ -146,8 +148,8 @@ export default function HomePage() {
                         <EnvironmentOutlined /> {trip.destination}
                       </Text>
                       <Text type="secondary">
-                        <CalendarOutlined /> {dayjs(trip.startDate).format('YYYY/MM/DD')}{' '}
-                        - {dayjs(trip.endDate).format('YYYY/MM/DD')}
+                        <CalendarOutlined /> {dayjs(trip.startDate).format('YYYY-MM-DD HH:mm:ss')}{' '}
+                        - {dayjs(trip.endDate).format('YYYY-MM-DD HH:mm:ss')}
                       </Text>
                       <Space>
                         <Text type="secondary">

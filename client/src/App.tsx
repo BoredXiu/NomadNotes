@@ -16,6 +16,7 @@ const NoteFormPage = lazy(() => import('./pages/NoteFormPage'));
 const NoteDetailPage = lazy(() => import('./pages/NoteDetailPage'));
 const ProfileEditPage = lazy(() => import('./pages/ProfileEditPage'));
 const ExplorePage = lazy(() => import('./pages/ExplorePage'));
+const PublicTripDetailPage = lazy(() => import('./pages/PublicTripDetailPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,6 +71,7 @@ export default function App() {
               >
                 <Route path="/" element={<HomePage />} />
                 <Route path="/explore" element={<ExplorePage />} />
+                <Route path="/public-trip/:id" element={<PublicTripDetailPage />} />
                 <Route path="/profile" element={<ProfileEditPage />} />
                 <Route path="/trip/new" element={<TripFormPage />} />
                 <Route path="/trip/:id" element={<TripDetailPage />} />
@@ -78,9 +80,17 @@ export default function App() {
                   path="/trip/:id/expense/new"
                   element={<ExpenseFormPage />}
                 />
+                <Route
+                  path="/trip/:tripId/expense/:expenseId/edit"
+                  element={<ExpenseFormPage />}
+                />
                 <Route path="/trip/:id/note/new" element={<NoteFormPage />} />
                 <Route
-                  path="/trip/:id/note/:noteId"
+                  path="/trip/:tripId/note/:noteId/edit"
+                  element={<NoteFormPage />}
+                />
+                <Route
+                  path="/trip/:tripId/note/:noteId"
                   element={<NoteDetailPage />}
                 />
               </Route>

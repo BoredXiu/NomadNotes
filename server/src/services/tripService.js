@@ -81,13 +81,22 @@ async function getPublicTripById(tripId) {
 		throw new AppError("公开旅程不存在或已设为私密", 404);
 	}
 
-	const expenseCount = await Expense.count({ where: { tripId: trip.id } });
-	const noteCount = await Note.count({ where: { tripId: trip.id } });
+	const expenses = await Expense.findAll({
+		where: { tripId: trip.id },
+		order: [["expenseDate", "DESC"]],
+	});
+	const expenseCount = expenses.length;
+	const notes = await Note.findAll({
+		where: { tripId: trip.id },
+		order: [["noteDate", "DESC"]],
+	});
 
 	return {
 		...trip.toJSON(),
 		expenseCount,
-		noteCount,
+		expenses,
+		noteCount: notes.length,
+		notes,
 	};
 }
 
@@ -171,11 +180,6 @@ async function deleteNoteFiles(note) {
 	if (note.images && Array.isArray(note.images)) {
 		for (const img of note.images) {
 			deleteFile(img);
-		}
-	}
-	if (note.vectorImages && Array.isArray(note.vectorImages)) {
-		for (const vec of note.vectorImages) {
-			deleteFile(vec);
 		}
 	}
 }

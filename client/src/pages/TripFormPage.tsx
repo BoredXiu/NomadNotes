@@ -10,21 +10,56 @@ import {
   Upload,
   Space,
   Switch,
+  Image,
 } from 'antd';
-import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { PlusOutlined, ArrowLeftOutlined, AimOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import * as tripsApi from '../api/trips';
 import * as expensesApi from '../api/expenses';
+import { compressImage } from '../utils/compress';
+import api from '../api/client';
 import dayjs from 'dayjs';
-import type { UploadFile } from 'antd';
 
 const { Title } = Typography;
+
+interface TempFile {
+  fileId: string;
+  ext: string;
+}
+
+async function reverseGeocode(lat: number, lon: number): Promise<string> {
+  try {
+    const { data } = await api.get<{
+      success: boolean;
+      data: { displayName: string };
+    }>('/geocode/reverse', { params: { lat, lon } });
+    if (data.success && data.data.displayName) return data.data.displayName;
+    throw new Error('empty');
+  } catch {
+    const resp = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`,
+    );
+    if (!resp.ok) throw new Error('fallback failed');
+    const json = await resp.json();
+    if (json.principalSubdivision || json.city) {
+      const parts = [];
+      if (json.principalSubdivision) parts.push(json.principalSubdivision);
+      if (json.city) parts.push(json.city);
+      if (json.locality && json.locality !== json.city) parts.push(json.locality);
+      return parts.join('');
+    }
+    throw new Error('no address');
+  }
+}
 
 export default function TripFormPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [tempFile, setTempFile] = useState<TempFile | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [existingCoverImage, setExistingCoverImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [locating, setLocating] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditing = !!id;
@@ -39,18 +74,55 @@ export default function TripFormPage() {
           endDate: dayjs(trip.endDate),
           isPublic: trip.isPublic === 1,
         });
-        setCoverImage(trip.coverImage);
+        setExistingCoverImage(trip.coverImage || null);
       }).catch(() => {
         message.error('加载旅程信息失败');
       });
     }
   }, [id, isEditing, form]);
 
+  const handleLocate = () => {
+    if (!navigator.geolocation) {
+      message.error('当前浏览器不支持地理定位');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const address = await reverseGeocode(latitude, longitude);
+          form.setFieldsValue({ destination: address });
+          message.success(`已定位: ${address}`);
+        } catch {
+          form.setFieldsValue({ destination: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` });
+          message.info('无法获取中文地址，已填入坐标');
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        const messages: Record<number, string> = {
+          1: '请授权定位权限',
+          2: '无法获取位置信息',
+          3: '定位超时',
+        };
+        message.error(messages[err.code] || '定位失败');
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  };
+
   const handleUpload = async (file: File) => {
     setUploading(true);
     try {
-      const url = await expensesApi.uploadFile(file);
-      setCoverImage(url);
+      const compressed = await compressImage(file, 750, 0.8);
+      const compressedFile = new File([compressed], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+      const result = await expensesApi.uploadFileToTemp(compressedFile);
+      setTempFile({ fileId: result.fileId, ext: result.ext });
+      setPreviewUrl(URL.createObjectURL(compressedFile));
+      setExistingCoverImage(null);
       message.success('封面上传成功');
     } catch {
       message.error('上传失败');
@@ -65,16 +137,24 @@ export default function TripFormPage() {
     destination: string;
     startDate: dayjs.Dayjs;
     endDate: dayjs.Dayjs;
+    isPublic: boolean;
   }) => {
     setLoading(true);
     try {
+      let coverImage: string | undefined = existingCoverImage || undefined;
+
+      if (tempFile) {
+        const result = await expensesApi.persistSingle(tempFile.fileId, tempFile.ext);
+        coverImage = result.imageUrl;
+      }
+
       const data = {
         title: values.title,
         destination: values.destination,
-        startDate: values.startDate.format('YYYY-MM-DD'),
-        endDate: values.endDate.format('YYYY-MM-DD'),
-        coverImage: coverImage || undefined,
-        isPublic: (values as any).isPublic ? 1 : 0,
+        startDate: values.startDate.format('YYYY-MM-DD HH:mm:ss'),
+        endDate: values.endDate.format('YYYY-MM-DD HH:mm:ss'),
+        coverImage,
+        isPublic: values.isPublic ? 1 : 0,
       };
 
       if (isEditing && id) {
@@ -91,6 +171,8 @@ export default function TripFormPage() {
       setLoading(false);
     }
   };
+
+  const displayImage = previewUrl || existingCoverImage;
 
   return (
     <Card style={{ maxWidth: 600, margin: '0 auto' }}>
@@ -109,6 +191,7 @@ export default function TripFormPage() {
         form={form}
         layout="vertical"
         onFinish={onFinish}
+        initialValues={{ isPublic: false }}
         autoComplete="off"
       >
         <Form.Item
@@ -124,7 +207,19 @@ export default function TripFormPage() {
           label="目的地"
           rules={[{ required: true, message: '请输入目的地' }]}
         >
-          <Input placeholder="例如：日本京都" />
+          <Input
+            placeholder="例如：日本京都"
+            suffix={
+              <Button
+                type="text"
+                size="small"
+                icon={<AimOutlined />}
+                loading={locating}
+                onClick={handleLocate}
+                title="获取当前位置"
+              />
+            }
+          />
         </Form.Item>
 
         <Form.Item
@@ -132,70 +227,67 @@ export default function TripFormPage() {
           label="开始日期"
           rules={[{ required: true, message: '请选择开始日期' }]}
         >
-          <DatePicker style={{ width: '100%' }} />
+          <DatePicker
+            showTime={{ format: 'HH:mm:ss' }}
+            format="YYYY-MM-DD HH:mm:ss"
+            style={{ width: '100%' }}
+          />
         </Form.Item>
 
         <Form.Item
           name="endDate"
           label="结束日期"
-          rules={[
-            { required: true, message: '请选择结束日期' },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                const start = getFieldValue('startDate');
-                if (!value || !start) {
-                  return Promise.resolve();
-                }
-                if (value.isBefore(start, 'day')) {
-                  return Promise.reject(new Error('结束日期不能早于开始日期'));
-                }
-                return Promise.resolve();
-              },
-            }),
-          ]}
+          rules={[{ required: true, message: '请选择结束日期' }]}
         >
-          <DatePicker style={{ width: '100%' }} />
+          <DatePicker
+            showTime={{ format: 'HH:mm:ss' }}
+            format="YYYY-MM-DD HH:mm:ss"
+            style={{ width: '100%' }}
+          />
         </Form.Item>
 
-        <Form.Item
-          name="isPublic"
-          label="公开旅程"
-          valuePropName="checked"
-        >
+        <Form.Item name="isPublic" label="公开旅程" valuePropName="checked">
           <Switch />
-          <span style={{ marginLeft: 8, color: '#888', fontSize: 12 }}>
-            开启后，其他用户可在"微游记"中查看你的旅程
-          </span>
         </Form.Item>
 
-        <Form.Item label="封面图片">
-          <Upload
-            listType="picture-card"
-            showUploadList={false}
-            beforeUpload={(file) => {
-              handleUpload(file);
-              return false;
-            }}
-            accept="image/jpeg,image/png,image/webp"
-          >
-            {coverImage ? (
-              <img
-                src={coverImage}
-                alt="cover"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        {displayImage ? (
+          <Form.Item label="封面图片">
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Image
+                src={displayImage}
+                alt="封面"
+                style={{ maxHeight: 200, objectFit: 'contain' }}
               />
-            ) : (
+              <Upload
+                maxCount={1}
+                beforeUpload={handleUpload}
+                accept="image/jpeg,image/png,image/webp"
+                showUploadList={false}
+              >
+                <Button loading={uploading}>更换封面</Button>
+              </Upload>
+            </Space>
+          </Form.Item>
+        ) : (
+          <Form.Item label="封面图片">
+            <Upload
+              maxCount={1}
+              beforeUpload={handleUpload}
+              accept="image/jpeg,image/png,image/webp"
+              showUploadList={false}
+              listType="picture-card"
+            >
               <div>
                 <PlusOutlined />
-                <div style={{ marginTop: 8 }}>{uploading ? '上传中...' : '上传封面'}</div>
+                <div style={{ marginTop: 8 }}>上传封面</div>
               </div>
-            )}
-          </Upload>
-        </Form.Item>
+            </Upload>
+          </Form.Item>
+        )}
 
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading} block>
-            {isEditing ? '保存修改' : '创建旅程'}
+            {isEditing ? '更新旅程' : '创建旅程'}
           </Button>
         </Form.Item>
       </Form>

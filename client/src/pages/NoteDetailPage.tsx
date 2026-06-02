@@ -9,7 +9,6 @@ import {
   Card,
   Breadcrumb,
   Empty,
-  Segmented,
 } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -26,7 +25,6 @@ export default function NoteDetailPage() {
   const [note, setNote] = useState<Note | null>(null);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<string>('original');
 
   useEffect(() => {
     if (!id || !noteId) return;
@@ -60,11 +58,6 @@ export default function NoteDetailPage() {
     return <Empty description="游记不存在" />;
   }
 
-  const hasVectors =
-    note.vectorImages &&
-    Array.isArray(note.vectorImages) &&
-    note.vectorImages.length > 0;
-
   return (
     <div>
       <Breadcrumb
@@ -74,7 +67,7 @@ export default function NoteDetailPage() {
           {
             title: <Link to={`/trip/${id}`}>{trip?.title || '旅程'}</Link>,
           },
-          { title: dayjs(note.noteDate).format('YYYY/MM/DD') + ' 游记' },
+          { title: dayjs(note.noteDate).format('YYYY-MM-DD HH:mm:ss') + ' 游记' },
         ]}
       />
 
@@ -88,10 +81,10 @@ export default function NoteDetailPage() {
 
       <Card>
         <Title level={4}>
-          游记 - {dayjs(note.noteDate).format('YYYY/MM/DD')}
+          游记 - {dayjs(note.noteDate).format('YYYY-MM-DD HH:mm:ss')}
         </Title>
         <Text type="secondary">
-          创建于 {dayjs(note.createdAt).format('YYYY/MM/DD HH:mm')}
+          创建于 {dayjs(note.createdAt).format('YYYY-MM-DD HH:mm:ss')}
         </Text>
 
         <div
@@ -107,45 +100,15 @@ export default function NoteDetailPage() {
 
         {note.images && note.images.length > 0 && (
           <div>
-            {hasVectors && (
-              <Segmented
-                options={[
-                  { label: '原始图片', value: 'original' },
-                  { label: '矢量图 (SVG)', value: 'vector' },
-                ]}
-                value={viewMode}
-                onChange={(val) => setViewMode(val as string)}
-                style={{ marginBottom: 16 }}
-              />
-            )}
             <Space wrap size={[12, 12]}>
-              {viewMode === 'original'
-                ? note.images.map((img, i) => (
-                    <Image
-                      key={i}
-                      src={img}
-                      width={200}
-                      style={{ borderRadius: 8 }}
-                    />
-                  ))
-                : note.vectorImages?.map(
-                    (vec, i) =>
-                      vec && (
-                        <img
-                          key={i}
-                          src={vec}
-                          alt={`vector-${i}`}
-                          style={{
-                            width: 200,
-                            height: 200,
-                            objectFit: 'contain',
-                            border: '1px solid #f0f0f0',
-                            borderRadius: 8,
-                            background: '#fafafa',
-                          }}
-                        />
-                      )
-                  )}
+              {note.images.map((img, i) => (
+                <Image
+                  key={i}
+                  src={img}
+                  width={200}
+                  style={{ borderRadius: 8 }}
+                />
+              ))}
             </Space>
           </div>
         )}

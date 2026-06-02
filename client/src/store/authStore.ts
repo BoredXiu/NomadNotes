@@ -13,7 +13,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   isAuthenticated: !!localStorage.getItem('accessToken'),
 
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+    set({ user });
+  },
 
   login: (user, accessToken, refreshToken) => {
     localStorage.setItem('accessToken', accessToken);

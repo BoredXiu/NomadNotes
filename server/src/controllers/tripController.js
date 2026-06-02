@@ -3,8 +3,8 @@ import * as tripService from "../services/tripService.js";
 async function createTrip(req, res, next) {
 	try {
 		const trip = await tripService.createTrip({
-			userId: req.userId,
 			...req.body,
+			userId: req.userId,
 		});
 		res.status(201).json({
 			success: true,

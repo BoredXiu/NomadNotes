@@ -7,23 +7,10 @@ const router = Router();
 
 router.use(auth);
 
-router.post("/", upload.single("file"), (req, res) => {
-	if (!req.file) {
-		return res.status(400).json({
-			success: false,
-			data: null,
-			message: "请选择文件",
-		});
-	}
-	const url = "/uploads/images/" + req.file.filename;
-	res.json({
-		success: true,
-		data: { url },
-		message: "上传成功",
-	});
-});
+router.post("/", upload.single("file"), uploadController.uploadTmpSingle);
 
 router.post("/tmp", upload.array("images", 10), uploadController.uploadTmp);
 router.post("/persist", uploadController.moveToPermanent);
+router.post("/persist-single", uploadController.moveToPermanentSingle);
 
 export default router;
