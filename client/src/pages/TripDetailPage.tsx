@@ -40,6 +40,7 @@ import type { Trip, Expense, Note, ExpenseStats } from '../types';
 import dayjs from 'dayjs';
 import { DownloadOutlined } from '@ant-design/icons';
 import ExportModal from '../components/ExportModal';
+import CurrencySwitcher from '../components/CurrencySwitcher';
 import { useCurrencyStore } from '../store/currencyStore';
 import {
   PieChart,
@@ -125,7 +126,7 @@ export default function TripDetailPage() {
     return {
       total: Math.round(total * 100) / 100,
       avgPerDay: dates.size > 0 ? Math.round((total / dates.size) * 100) / 100 : 0,
-      maxCategory: `${maxCategory} (¥${Math.round(maxAmount * 100) / 100})`,
+      maxCategory: `${maxCategory} (${currencySymbol}${convertAmount(Math.round(maxAmount * 100) / 100).toFixed(currency === 'JPY' ? 0 : 2)})`,
       count: expenses.length,
       noteCount: notes.length,
       totalImages,
@@ -328,7 +329,7 @@ export default function TripDetailPage() {
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={1} colSpan={4}>
                     <Text strong style={{ color: '#ff4d4f',display:'block', textAlign:'right' }}>
-                      ¥{total.toFixed(2)}
+                      {formatAmount(total)}
                     </Text>
                   </Table.Summary.Cell>
 
@@ -356,12 +357,7 @@ export default function TripDetailPage() {
             >
               写游记
             </Button>
-            {notes.length > 0 && (
-              <Button icon={<DownloadOutlined />} onClick={() => setExportModalOpen(true)}>
-                导出游记
-              </Button>
-            )}
-          </Space>
+            </Space>
           {notes.length === 0 ? (
             <Empty description="暂无游记" />
           ) : (
@@ -448,6 +444,9 @@ export default function TripDetailPage() {
       ),
       children: (
         <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+            <CurrencySwitcher />
+          </div>
           {expenses.length > 0 || notes.length > 0 ? (
             <>
               <Row gutter={16} style={{ marginBottom: 24 }}>
@@ -546,7 +545,7 @@ export default function TripDetailPage() {
                             paddingAngle={0}
                             labelLine={false}
                             label={({ category, total }) =>
-                              `${category} ¥${total.toFixed(2)}`
+                              `${category} ${formatAmount(total)}`
                             }
                           >
                             {stats.categories.map((_, index) => (
@@ -760,14 +759,25 @@ export default function TripDetailPage() {
           setSearchParams({ tab: key }, { replace: true });
         }}
         renderTabBar={() => (
-          <SkateboardTabBar
-            activeKey={activeTab}
-            onChange={(key: string) => {
-              setActiveTab(key);
-              setSearchParams({ tab: key }, { replace: true });
-            }}
-            items={tabItems}
-          />
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+            <SkateboardTabBar
+              activeKey={activeTab}
+              onChange={(key: string) => {
+                setActiveTab(key);
+                setSearchParams({ tab: key }, { replace: true });
+              }}
+              items={tabItems}
+            />
+            {(notes.length > 0 || expenses.length > 0) && (
+              <Button
+                icon={<DownloadOutlined />}
+                onClick={() => setExportModalOpen(true)}
+                style={{ flexShrink: 0, marginBottom: 16 }}
+              >
+                导出游记
+              </Button>
+            )}
+          </div>
         )}
         items={tabItems}
       />
@@ -780,6 +790,7 @@ export default function TripDetailPage() {
           tripId={trip.id}
           tripTitle={trip.title}
           notes={notes}
+          hasExpenses={expenses.length > 0}
         />
       )}
     </div>

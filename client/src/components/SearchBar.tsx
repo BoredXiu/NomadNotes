@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Input, AutoComplete, useBreakpoint } from "antd";
+import { Input, AutoComplete, Grid } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { getSearchSuggestions } from "../api/search";
@@ -17,7 +17,7 @@ const SearchBar: React.FC<{ style?: React.CSSProperties }> = ({ style }) => {
 	const [loading, setLoading] = useState(false);
 	const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const navigate = useNavigate();
-	const screens = useBreakpoint();
+	const screens = Grid.useBreakpoint();
 
 	// 获取搜索建议
 	const fetchSuggestions = useCallback(async (query: string) => {

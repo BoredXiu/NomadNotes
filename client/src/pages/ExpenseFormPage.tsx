@@ -21,6 +21,8 @@ import { compressImage } from '../utils/compress';
 import { EXPENSE_CATEGORIES } from '../types';
 import type { Expense } from '../types';
 import dayjs from 'dayjs';
+import CurrencySwitcher from '../components/CurrencySwitcher';
+import { useCurrencyStore } from '../store/currencyStore';
 
 const { Title } = Typography;
 
@@ -42,6 +44,10 @@ export default function ExpenseFormPage() {
 
   const resolvedTripId = id || tripId;
   const isEditing = !!expenseId;
+
+  // 多币种支持
+  const { currency, getCurrencySymbol, convertAmount } = useCurrencyStore();
+  const currencySymbol = getCurrencySymbol();
 
   useEffect(() => {
     if (isEditing && expenseId) {
@@ -148,15 +154,18 @@ export default function ExpenseFormPage() {
 
   return (
     <Card style={{ maxWidth: 500, margin: '0 auto' }}>
-      <Space style={{ marginBottom: 24 }}>
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(-1)}
-          type="text"
-        />
-        <Title level={4} style={{ margin: 0 }}>
-          {isEditing ? '编辑账单' : '记一笔'}
-        </Title>
+      <Space style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+        <Space>
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate(-1)}
+            type="text"
+          />
+          <Title level={4} style={{ margin: 0 }}>
+            {isEditing ? '编辑账单' : '记一笔'}
+          </Title>
+        </Space>
+        <CurrencySwitcher />
       </Space>
 
       <Form
@@ -181,10 +190,23 @@ export default function ExpenseFormPage() {
           <InputNumber
             min={0}
             precision={2}
-            prefix="¥"
+            prefix={currencySymbol}
             style={{ width: '100%' }}
             placeholder="0.00"
           />
+        </Form.Item>
+        {/* 货币转换提示 */}
+        <Form.Item noStyle shouldUpdate={(prev, cur) => prev.amount !== cur.amount}>
+          {({ getFieldValue }) => {
+            const amount = getFieldValue('amount');
+            if (!amount || currency === 'CNY') return null;
+            const converted = convertAmount(Number(amount));
+            return (
+              <div style={{ marginTop: -8, marginBottom: 16, fontSize: 12, color: '#888' }}>
+                约 {currencySymbol}{converted.toFixed(currency === 'JPY' ? 0 : 2)}（按当前汇率自动转换）
+              </div>
+            );
+          }}
         </Form.Item>
 
         <Form.Item

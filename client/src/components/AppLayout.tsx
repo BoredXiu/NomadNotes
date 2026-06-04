@@ -14,7 +14,6 @@ import { useThemeStore } from '../store/themeStore';
 import { NomadLogoIcon, MyTripIcon } from './NomadIcons';
 import SkateboardTabBar from './SkateboardTabBar';
 import SearchBar from './SearchBar';
-import CurrencySwitcher from './CurrencySwitcher';
 
 const { Header, Content } = Layout;
 const { Text } = Typography;
@@ -75,11 +74,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <Text strong style={{ color: '#fff', fontSize: 18 }}>
             NomadNotes
           </Text>
-          <SearchBar style={{ marginLeft: 16 }} />
         </Space>
 
         <Space size="middle">
-          <CurrencySwitcher />
           <Button
             type="primary"
             icon={<PlusOutlined />}
@@ -121,12 +118,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
         activeKey={activeKey}
         onChange={(key) => navigate(key)}
         renderTabBar={() => (
-          <div style={{ padding: '0 24px' }}>
+          <div style={{ padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <SkateboardTabBar
               activeKey={activeKey}
               onChange={(key: string) => navigate(key)}
               items={tabItems}
             />
+            <SearchBar style={{ flexShrink: 0 }} />
           </div>
         )}
         items={tabItems}

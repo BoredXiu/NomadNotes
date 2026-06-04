@@ -1,19 +1,19 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Select, Button, Tooltip, Space, message } from "antd";
-import { ReloadOutlined, DollarOutlined } from "@ant-design/icons";
-import { getCurrencyRates, refreshCurrencyRates } from "../api/currency";
+import { Select, Space } from "antd";
+import { DollarOutlined } from "@ant-design/icons";
+import { getCurrencyRates } from "../api/currency";
 import { useCurrencyStore } from "../store/currencyStore";
 import type { CurrencyInfo } from "../types";
 
 /**
  * 货币切换组件
- * 集成在 Header 或价格显示区域，提供货币切换和汇率刷新
+ * 提供货币选择和自动转换显示
  */
-const CurrencySwitcher: React.FC<{ showRefresh?: boolean; style?: React.CSSProperties }> = ({
-	showRefresh = true,
+const CurrencySwitcher: React.FC<{ style?: React.CSSProperties; size?: "small" | "middle" | "large" }> = ({
 	style,
+	size = "small",
 }) => {
-	const { currency, setCurrency, setRates, rates, loading, setLoading } = useCurrencyStore();
+	const { currency, setCurrency, setRates, loading, setLoading } = useCurrencyStore();
 	const [currencies, setCurrencies] = useState<CurrencyInfo[]>([]);
 
 	// 加载汇率数据
@@ -25,26 +25,10 @@ const CurrencySwitcher: React.FC<{ showRefresh?: boolean; style?: React.CSSPrope
 			setCurrencies(data.currencies);
 		} catch (error: unknown) {
 			console.error("获取汇率失败:", error);
-			// 静默失败，使用缓存或默认值
 		} finally {
 			setLoading(false);
 		}
 	}, [setLoading, setRates]);
-
-	// 刷新汇率
-	const handleRefresh = async () => {
-		try {
-			setLoading(true);
-			const data = await refreshCurrencyRates();
-			setRates(data.rates);
-			setCurrencies(data.currencies);
-			message.success("汇率已刷新");
-		} catch {
-			message.error("汇率刷新失败");
-		} finally {
-			setLoading(false);
-		}
-	};
 
 	useEffect(() => {
 		loadRates();
@@ -62,28 +46,17 @@ const CurrencySwitcher: React.FC<{ showRefresh?: boolean; style?: React.CSSPrope
 
 	return (
 		<Space size={4} style={style}>
-			<DollarOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+			<DollarOutlined style={{ color: "#52c41a", fontSize: size === "large" ? 18 : 14 }} />
 			<Select
 				value={currency}
 				onChange={(val) => setCurrency(val)}
 				options={options}
 				loading={loading}
-				size="small"
+				size={size}
 				style={{ minWidth: 130 }}
 				popupMatchSelectWidth={false}
 				variant="borderless"
 			/>
-			{showRefresh && (
-				<Tooltip title="刷新汇率">
-					<Button
-						type="text"
-						size="small"
-						icon={<ReloadOutlined spin={loading} />}
-						onClick={handleRefresh}
-						loading={loading}
-					/>
-				</Tooltip>
-			)}
 		</Space>
 	);
 };
