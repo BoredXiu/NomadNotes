@@ -13,6 +13,8 @@ import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { NomadLogoIcon, MyTripIcon } from './NomadIcons';
 import SkateboardTabBar from './SkateboardTabBar';
+import SearchBar from './SearchBar';
+import CurrencySwitcher from './CurrencySwitcher';
 
 const { Header, Content } = Layout;
 const { Text } = Typography;
@@ -73,9 +75,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <Text strong style={{ color: '#fff', fontSize: 18 }}>
             NomadNotes
           </Text>
+          <SearchBar style={{ marginLeft: 16 }} />
         </Space>
 
         <Space size="middle">
+          <CurrencySwitcher />
           <Button
             type="primary"
             icon={<PlusOutlined />}

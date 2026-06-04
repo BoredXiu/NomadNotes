@@ -16,6 +16,7 @@ import TripDetailPage from './pages/TripDetailPage';
 import ExpenseFormPage from './pages/ExpenseFormPage';
 import NoteFormPage from './pages/NoteFormPage';
 import TripFormPage from './pages/TripFormPage';
+import SearchResultsPage from './pages/SearchResultsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -86,6 +87,7 @@ export default function App() {
                 <Route path="/trip/:tripId/expense/:expenseId/edit" element={<ExpenseFormPage />} />
                 <Route path="/trip/:tripId/note/new" element={<NoteFormPage />} />
                 <Route path="/trip/:tripId/note/:noteId/edit" element={<NoteFormPage />} />
+                <Route path="/search" element={<SearchResultsPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

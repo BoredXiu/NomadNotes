@@ -20,6 +20,8 @@ import { tripRouter as noteTripRouter, resourceRouter as noteResourceRouter } fr
 import uploadRoutes from "./routes/upload.js";
 import profileRoutes from "./routes/profile.js";
 import geocodeRoutes from "./routes/geocode.js";
+import currencyRoutes from "./routes/currency.js";
+import searchRoutes from "./routes/search.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -110,6 +112,8 @@ app.use("/api/notes", noteResourceRouter);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/geocode", geocodeRoutes);
+app.use("/api/currency", currencyRoutes);
+app.use("/api/search", searchRoutes);
 
 app.get("/api/health", async (_req, res) => {
 	try {

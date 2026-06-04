@@ -81,3 +81,33 @@ export const EXPENSE_CATEGORIES = [
 	{ value: "购物", label: "购物" },
 	{ value: "其他", label: "其他" },
 ] as const;
+
+// 货币类型
+export interface CurrencyInfo {
+	code: string;
+	symbol: string;
+	name: string;
+}
+
+// 搜索结果项
+export interface SearchResultItem {
+	id: string;
+	type: "trip" | "note" | "expense";
+	title?: string;
+	destination?: string;
+	content?: string;
+	note?: string;
+	category?: string;
+	amount?: number;
+	tripTitle?: string;
+	tripId?: string;
+	username?: string;
+	createdAt?: string;
+	noteDate?: string;
+	expenseDate?: string;
+	coverImage?: string;
+	images?: string[] | null;
+	isPublic?: number;
+	startDate?: string;
+	endDate?: string;
+}

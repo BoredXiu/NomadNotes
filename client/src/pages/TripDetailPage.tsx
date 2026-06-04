@@ -38,6 +38,9 @@ import SkateboardNav from '../components/SkateboardNav';
 import SkateboardTabBar from '../components/SkateboardTabBar';
 import type { Trip, Expense, Note, ExpenseStats } from '../types';
 import dayjs from 'dayjs';
+import { DownloadOutlined } from '@ant-design/icons';
+import ExportModal from '../components/ExportModal';
+import { useCurrencyStore } from '../store/currencyStore';
 import {
   PieChart,
   Pie,
@@ -68,6 +71,17 @@ export default function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'expenses');
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+
+  // 多币种支持
+  const { currency, getCurrencySymbol, convertAmount } = useCurrencyStore();
+  const currencySymbol = getCurrencySymbol();
+
+  // 格式化金额（带货币符号和转换）
+  const formatAmount = (amount: number) => {
+    const converted = convertAmount(amount);
+    return `${currencySymbol}${converted.toFixed(currency === 'JPY' ? 0 : 2)}`;
+  };
 
 
   const isOwner = trip?.isOwner !== false;
@@ -218,7 +232,7 @@ export default function TripDetailPage() {
       align: 'center',
       render: (a: number) => (
         <Text strong style={{ color: '#ff4d4f' }}>
-          ¥{Number(a).toFixed(2)}
+          {formatAmount(Number(a))}
         </Text>
       ),
     },
@@ -342,6 +356,11 @@ export default function TripDetailPage() {
             >
               写游记
             </Button>
+            {notes.length > 0 && (
+              <Button icon={<DownloadOutlined />} onClick={() => setExportModalOpen(true)}>
+                导出游记
+              </Button>
+            )}
           </Space>
           {notes.length === 0 ? (
             <Empty description="暂无游记" />
@@ -436,9 +455,9 @@ export default function TripDetailPage() {
                   <Card>
                     <Statistic
                       title="总支出"
-                      value={statsSummary.total}
-                      precision={2}
-                      prefix="¥"
+                      value={convertAmount(statsSummary.total)}
+                      precision={currency === 'JPY' ? 0 : 2}
+                      prefix={currencySymbol}
                       valueStyle={{ color: '#cf1322' }}
                     />
                   </Card>
@@ -447,9 +466,9 @@ export default function TripDetailPage() {
                   <Card>
                     <Statistic
                       title="日均支出"
-                      value={statsSummary.avgPerDay}
-                      precision={2}
-                      prefix="¥"
+                      value={convertAmount(statsSummary.avgPerDay)}
+                      precision={currency === 'JPY' ? 0 : 2}
+                      prefix={currencySymbol}
                       valueStyle={{ color: '#1890ff' }}
                     />
                   </Card>
@@ -537,11 +556,11 @@ export default function TripDetailPage() {
                               />
                             ))}
                           </Pie>
-                          <Tooltip formatter={(value: number) => `¥${value.toFixed(2)}`} />
+                          <Tooltip formatter={(value: number) => formatAmount(value)} />
                           <Legend formatter={(value, entry) => {
                             const data = entry.payload;
                             if (data && typeof data.value === 'number') {
-                              return `${value} ¥${data.value.toFixed(2)}`;
+                              return `${value} ${formatAmount(data.value)}`;
                             }
                             return value;
                           }} />
@@ -558,7 +577,7 @@ export default function TripDetailPage() {
                             <XAxis dataKey="date" />
                             <YAxis />
                             <Tooltip
-                              formatter={(value: number) => [`¥${value.toFixed(2)}`, '金额']}
+                              formatter={(value: number) => [formatAmount(value), '金额']}
                               labelFormatter={(label) => `日期: ${label}`}
                             />
                             <Bar dataKey="amount" fill="#1890ff" radius={[4, 4, 0, 0]} name="金额" />
@@ -596,7 +615,7 @@ export default function TripDetailPage() {
                         align: 'center',
                         render: (v: number) => (
                           <Text strong style={{ color: '#ff4d4f' }}>
-                            ¥{v.toFixed(2)}
+                            {formatAmount(v)}
                           </Text>
                         ),
                       },
@@ -752,6 +771,17 @@ export default function TripDetailPage() {
         )}
         items={tabItems}
       />
+
+      {/* 游记导出弹窗 */}
+      {trip && (
+        <ExportModal
+          open={exportModalOpen}
+          onClose={() => setExportModalOpen(false)}
+          tripId={trip.id}
+          tripTitle={trip.title}
+          notes={notes}
+        />
+      )}
     </div>
   );
 }
