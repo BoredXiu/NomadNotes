@@ -28,8 +28,8 @@ const Expense = sequelize.define(
 			type: DataTypes.TEXT,
 			allowNull: true,
 		},
-		receiptImage: {
-			type: DataTypes.STRING(500),
+		receiptImages: {
+			type: DataTypes.JSON,
 			allowNull: true,
 		},
 		expenseDate: {

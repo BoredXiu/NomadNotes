@@ -1,4 +1,5 @@
 import * as authService from '../services/authService.js';
+import * as captchaService from '../services/captchaService.js';
 import { validationResult } from 'express-validator';
 
 async function register(req, res, next) {
@@ -9,6 +10,15 @@ async function register(req, res, next) {
         success: false,
         data: null,
         message: errors.array().map((e) => e.msg).join('; '),
+      });
+    }
+
+    const captchaResult = captchaService.verifyCaptcha(req.body.captchaId, req.body.captchaText);
+    if (!captchaResult.valid) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: captchaResult.message,
       });
     }
 
@@ -31,6 +41,15 @@ async function login(req, res, next) {
         success: false,
         data: null,
         message: errors.array().map((e) => e.msg).join('; '),
+      });
+    }
+
+    const captchaResult = captchaService.verifyCaptcha(req.body.captchaId, req.body.captchaText);
+    if (!captchaResult.valid) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: captchaResult.message,
       });
     }
 

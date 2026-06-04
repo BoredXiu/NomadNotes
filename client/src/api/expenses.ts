@@ -49,3 +49,8 @@ export async function persistSingle(fileId: string, ext: string): Promise<{ imag
 	const res = await api.post<ApiResponse<{ imageUrl: string }>>("/upload/persist-single", { fileId, ext });
 	return res.data.data;
 }
+
+export async function persistMultiple(files: { fileId: string; ext: string }[]): Promise<{ imageUrl: string }[]> {
+	const res = await api.post<ApiResponse<{ imageUrl: string }[]>>("/upload/persist-multiple", { files });
+	return res.data.data;
+}

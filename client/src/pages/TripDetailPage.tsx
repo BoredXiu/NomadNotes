@@ -1,8 +1,6 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
-  Tabs,
   Typography,
-  Spin,
   message,
   Button,
   Space,
@@ -12,15 +10,14 @@ import {
   Table,
   Popconfirm,
   Empty,
-  Timeline,
   Image,
   Card,
   Breadcrumb,
-  Segmented,
   Avatar,
   Row,
   Col,
   Statistic,
+  Tabs,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -32,12 +29,13 @@ import {
   EnvironmentOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import * as tripsApi from '../api/trips';
 import * as expensesApi from '../api/expenses';
 import * as notesApi from '../api/notes';
-import { useAuthStore } from '../store/authStore';
 import { TripDetailSkeleton } from '../components/Skeletons';
+import SkateboardNav from '../components/SkateboardNav';
+import SkateboardTabBar from '../components/SkateboardTabBar';
 import type { Trip, Expense, Note, ExpenseStats } from '../types';
 import dayjs from 'dayjs';
 import {
@@ -68,9 +66,9 @@ export default function TripDetailPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [stats, setStats] = useState<ExpenseStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('expenses');
-  const [viewMode, setViewMode] = useState<string>('original');
-  const user = useAuthStore((s) => s.user);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'expenses');
+
 
   const isOwner = trip?.isOwner !== false;
 
@@ -198,23 +196,26 @@ export default function TripDetailPage() {
     return <Empty description="旅程不存在" />;
   }
 
-  const expenseColumns = [
+  const expenseColumns: any = [
     {
       title: '日期',
       dataIndex: 'expenseDate',
       key: 'expenseDate',
+      align: 'center',
       render: (d: string) => dayjs(d).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
       title: '分类',
       dataIndex: 'category',
       key: 'category',
+      align: 'center',
       render: (c: string) => <Tag>{c}</Tag>,
     },
     {
       title: '金额',
       dataIndex: 'amount',
       key: 'amount',
+      align: 'center',
       render: (a: number) => (
         <Text strong style={{ color: '#ff4d4f' }}>
           ¥{Number(a).toFixed(2)}
@@ -225,23 +226,30 @@ export default function TripDetailPage() {
       title: '备注',
       dataIndex: 'note',
       key: 'note',
+      align: 'center',
       ellipsis: true,
     },
     {
       title: '小票',
-      dataIndex: 'receiptImage',
-      key: 'receiptImage',
-      render: (img: string | null) =>
-        img ? (
-          <Image
-            src={img}
-            width={40}
-            height={40}
-            style={{ objectFit: 'cover', borderRadius: 4, cursor: 'pointer' }}
-            preview={{
-              mask: '查看',
-            }}
-          />
+      dataIndex: 'receiptImages',
+      key: 'receiptImages',
+      align: 'center',
+      render: (imgs: string[] | null) =>
+        imgs && imgs.length > 0 ? (
+          <Space size={4}>
+            {imgs.map((img, idx) => (
+              <Image
+                key={idx}
+                src={img}
+                width={40}
+                height={40}
+                style={{ objectFit: 'cover', borderRadius: 4, cursor: 'pointer' }}
+                preview={{
+                  mask: '查看',
+                }}
+              />
+            ))}
+          </Space>
         ) : (
           <Text type="secondary">-</Text>
         ),
@@ -249,6 +257,7 @@ export default function TripDetailPage() {
     {
       title: '操作',
       key: 'action',
+      align: 'center',
       render: (_: unknown, record: Expense) => (
         <Space>
           <Button
@@ -303,12 +312,12 @@ export default function TripDetailPage() {
                   <Table.Summary.Cell index={0} colSpan={2}>
                     <Text strong>合计</Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={1}>
-                    <Text strong style={{ color: '#ff4d4f' }}>
+                  <Table.Summary.Cell index={1} colSpan={4}>
+                    <Text strong style={{ color: '#ff4d4f',display:'block', textAlign:'right' }}>
                       ¥{total.toFixed(2)}
                     </Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} colSpan={2} />
+
                 </Table.Summary.Row>
               );
             }}
@@ -337,59 +346,75 @@ export default function TripDetailPage() {
           {notes.length === 0 ? (
             <Empty description="暂无游记" />
           ) : (
-            <Timeline
-              items={notes.map((note) => ({
-                children: (
-                  <Card
-                    key={note.id}
-                    size="small"
-                    title={
-                      <Space>
-                        <Text type="secondary">
-                          {dayjs(note.noteDate).format('YYYY-MM-DD HH:mm:ss')}
-                        </Text>
-                      </Space>
-                    }
-                    extra={
-                      <Space>
-                        <Button
-                          type="link"
-                          icon={<EditOutlined />}
-                          onClick={() => navigate(`/trip/${id}/note/${note.id}/edit`)}
-                        />
-                        <Popconfirm
-                          title="确定删除这篇游记吗？"
-                          onConfirm={() => handleDeleteNote(note.id)}
-                        >
-                          <Button type="link" danger icon={<DeleteOutlined />} />
-                        </Popconfirm>
-                      </Space>
-                    }
-                  >
-                    <div
-                      style={{
-                        whiteSpace: 'pre-wrap',
-                        marginBottom: 12,
-                      }}
-                    >
-                      {note.content}
-                    </div>
-                    {note.images && note.images.length > 0 && (
-                      <Space wrap>
-                        {note.images.map((img, i) => (
+            <Table
+              dataSource={notes}
+              rowKey="id"
+              pagination={false}
+              columns={[
+                {
+                  title: '日期',
+                  dataIndex: 'noteDate',
+                  key: 'noteDate',
+                  align: 'center',
+                  width: 180,
+                  render: (d: string) => dayjs(d).format('YYYY-MM-DD HH:mm:ss'),
+                },
+                {
+                  title: '内容',
+                  dataIndex: 'content',
+                  key: 'content',
+                  align: 'center',
+                  ellipsis: true,
+                  render: (text: string) => (
+                    <div style={{ whiteSpace: 'pre-wrap', textAlign: 'center' }}>{text}</div>
+                  ),
+                },
+                {
+                  title: '图片',
+                  dataIndex: 'images',
+                  key: 'images',
+                  align: 'center',
+                  width: 160,
+                  render: (imgs: string[] | null) =>
+                    imgs && imgs.length > 0 ? (
+                      <Space size={4}>
+                        {imgs.map((img, idx) => (
                           <Image
-                            key={i}
+                            key={idx}
                             src={img}
-                            width={120}
-                            height={120}
-                            style={{ objectFit: 'cover', borderRadius: 8 }}
+                            width={40}
+                            height={40}
+                            style={{ objectFit: 'cover', borderRadius: 4, cursor: 'pointer' }}
+                            preview={{ mask: '查看' }}
                           />
                         ))}
                       </Space>
-                    )}
-                  </Card>
-                ),
-              }))}
+                    ) : (
+                      <Text type="secondary">-</Text>
+                    ),
+                },
+                {
+                  title: '操作',
+                  key: 'action',
+                  align: 'center',
+                  width: 160,
+                  render: (_: unknown, record: Note) => (
+                    <Space>
+                      <Button
+                        type="link"
+                        icon={<EditOutlined />}
+                        onClick={() => navigate(`/trip/${id}/note/${record.id}/edit`)}
+                      />
+                      <Popconfirm
+                        title="确定删除这篇游记吗？"
+                        onConfirm={() => handleDeleteNote(record.id)}
+                      >
+                        <Button type="link" danger icon={<DeleteOutlined />} />
+                      </Popconfirm>
+                    </Space>
+                  ),
+                },
+              ]}
             />
           )}
         </div>
@@ -443,7 +468,7 @@ export default function TripDetailPage() {
                   <Card>
                     <Statistic
                       title="最高消费类别"
-                      value={statsSummary.maxCategory || '-'}
+                      value={statsSummary.maxCategory || '暂无'}
                       valueStyle={{ fontSize: 16, color: '#fa8c16' }}
                     />
                   </Card>
@@ -498,6 +523,9 @@ export default function TripDetailPage() {
                             cx="50%"
                             cy="50%"
                             outerRadius={120}
+                            innerRadius={0}
+                            paddingAngle={0}
+                            labelLine={false}
                             label={({ category, total }) =>
                               `${category} ¥${total.toFixed(2)}`
                             }
@@ -510,7 +538,13 @@ export default function TripDetailPage() {
                             ))}
                           </Pie>
                           <Tooltip formatter={(value: number) => `¥${value.toFixed(2)}`} />
-                          <Legend />
+                          <Legend formatter={(value, entry) => {
+                            const data = entry.payload;
+                            if (data && typeof data.value === 'number') {
+                              return `${value} ¥${data.value.toFixed(2)}`;
+                            }
+                            return value;
+                          }} />
                         </PieChart>
                       </ResponsiveContainer>
                     </Card>
@@ -523,8 +557,11 @@ export default function TripDetailPage() {
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="date" />
                             <YAxis />
-                            <Tooltip formatter={(value: number) => `¥${value.toFixed(2)}`} />
-                            <Bar dataKey="amount" fill="#1890ff" radius={[4, 4, 0, 0]} />
+                            <Tooltip
+                              formatter={(value: number) => [`¥${value.toFixed(2)}`, '金额']}
+                              labelFormatter={(label) => `日期: ${label}`}
+                            />
+                            <Bar dataKey="amount" fill="#1890ff" radius={[4, 4, 0, 0]} name="金额" />
                           </BarChart>
                         </ResponsiveContainer>
                       ) : (
@@ -545,17 +582,18 @@ export default function TripDetailPage() {
                       {
                         title: '分类',
                         dataIndex: 'category',
+                        align: 'center',
                         render: (c: string) => <Tag>{c}</Tag>,
                       },
                       {
                         title: '笔数',
                         dataIndex: 'count',
-                        align: 'right',
+                        align: 'center',
                       },
                       {
                         title: '金额',
                         dataIndex: 'total',
-                        align: 'right',
+                        align: 'center',
                         render: (v: number) => (
                           <Text strong style={{ color: '#ff4d4f' }}>
                             ¥{v.toFixed(2)}
@@ -698,7 +736,20 @@ export default function TripDetailPage() {
 
       <Tabs
         activeKey={activeTab}
-        onChange={setActiveTab}
+        onChange={(key: string) => {
+          setActiveTab(key);
+          setSearchParams({ tab: key }, { replace: true });
+        }}
+        renderTabBar={() => (
+          <SkateboardTabBar
+            activeKey={activeTab}
+            onChange={(key: string) => {
+              setActiveTab(key);
+              setSearchParams({ tab: key }, { replace: true });
+            }}
+            items={tabItems}
+          />
+        )}
         items={tabItems}
       />
     </div>

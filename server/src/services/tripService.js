@@ -138,8 +138,10 @@ async function deleteTrip(tripId, userId) {
 
 	const expenses = await Expense.findAll({ where: { tripId } });
 	for (const expense of expenses) {
-		if (expense.receiptImage) {
-			deleteFile(expense.receiptImage);
+		if (expense.receiptImages && Array.isArray(expense.receiptImages)) {
+			for (const img of expense.receiptImages) {
+				deleteFile(img);
+			}
 		}
 	}
 	await Expense.destroy({ where: { tripId } });

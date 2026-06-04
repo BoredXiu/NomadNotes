@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Input, Button, Card, Typography, message, Space } from 'antd';
-import { MailOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
+import { MailOutlined, LockOutlined, UserOutlined, SafetyOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import * as authApi from '../api/auth';
 import { useAuthStore } from '../store/authStore';
@@ -9,23 +9,47 @@ const { Title, Text } = Typography;
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
+  const [captchaSvg, setCaptchaSvg] = useState('');
+  const [captchaId, setCaptchaId] = useState('');
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
+
+  const fetchCaptcha = useCallback(async () => {
+    try {
+      const data = await authApi.getCaptcha();
+      setCaptchaSvg(data.svg);
+      setCaptchaId(data.captchaId);
+    } catch {
+      message.error('获取验证码失败');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCaptcha();
+  }, [fetchCaptcha]);
 
   const onFinish = async (values: {
     username: string;
     email: string;
     password: string;
+    captchaText: string;
   }) => {
     setLoading(true);
     try {
-      const result = await authApi.register(values);
+      const result = await authApi.register({
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        captchaId,
+        captchaText: values.captchaText,
+      });
       login(result.user, result.accessToken, result.refreshToken);
       message.success('注册成功');
       navigate('/');
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       message.error(err?.response?.data?.message || '注册失败');
+      fetchCaptcha();
     } finally {
       setLoading(false);
     }
@@ -87,6 +111,25 @@ export default function RegisterPage() {
                 placeholder="密码"
                 size="large"
               />
+            </Form.Item>
+
+            <Form.Item
+              name="captchaText"
+              rules={[{ required: true, message: '请输入验证码' }]}
+            >
+              <Space style={{ width: '100%' }}>
+                <Input
+                  prefix={<SafetyOutlined />}
+                  placeholder="验证码"
+                  size="large"
+                  style={{ width: '60%' }}
+                />
+                <div
+                  style={{ width: '38%', cursor: 'pointer', height: 40 }}
+                  onClick={fetchCaptcha}
+                  dangerouslySetInnerHTML={{ __html: captchaSvg }}
+                />
+              </Space>
             </Form.Item>
 
             <Form.Item>

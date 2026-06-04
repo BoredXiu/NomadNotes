@@ -32,7 +32,7 @@ export interface Expense {
 	category: string;
 	amount: number;
 	note: string | null;
-	receiptImage: string | null;
+	receiptImages: string[] | null;
 	expenseDate: string;
 	createdAt: string;
 }

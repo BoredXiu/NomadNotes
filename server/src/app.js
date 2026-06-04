@@ -13,6 +13,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { startCleanupScheduler } from "./services/cleanupScheduler.js";
 import { startTripStatusScheduler } from "./services/tripStatusScheduler.js";
 import authRoutes from "./routes/auth.js";
+import captchaRoutes from "./routes/captcha.js";
 import tripRoutes from "./routes/trips.js";
 import { tripRouter as expenseTripRouter, resourceRouter as expenseResourceRouter } from "./routes/expenses.js";
 import { tripRouter as noteTripRouter, resourceRouter as noteResourceRouter } from "./routes/notes.js";
@@ -100,6 +101,7 @@ app.use(
 );
 
 app.use("/api/auth", authRoutes);
+app.use("/api/captcha", captchaRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/trips", expenseTripRouter);
 app.use("/api/trips", noteTripRouter);

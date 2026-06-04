@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Input, Button, Card, Typography, message, Space } from 'antd';
-import { MailOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
+import { MailOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import * as authApi from '../api/auth';
 import { useAuthStore } from '../store/authStore';
@@ -9,19 +9,41 @@ const { Title, Text } = Typography;
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [captchaSvg, setCaptchaSvg] = useState('');
+  const [captchaId, setCaptchaId] = useState('');
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
 
-  const onFinish = async (values: { email: string; password: string }) => {
+  const fetchCaptcha = useCallback(async () => {
+    try {
+      const data = await authApi.getCaptcha();
+      setCaptchaSvg(data.svg);
+      setCaptchaId(data.captchaId);
+    } catch {
+      message.error('获取验证码失败');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCaptcha();
+  }, [fetchCaptcha]);
+
+  const onFinish = async (values: { account: string; password: string; captchaText: string }) => {
     setLoading(true);
     try {
-      const result = await authApi.login(values);
+      const result = await authApi.login({
+        account: values.account,
+        password: values.password,
+        captchaId,
+        captchaText: values.captchaText,
+      });
       login(result.user, result.accessToken, result.refreshToken);
       message.success('登录成功');
       navigate('/');
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       message.error(err?.response?.data?.message || '登录失败');
+      fetchCaptcha();
     } finally {
       setLoading(false);
     }
@@ -48,13 +70,12 @@ export default function LoginPage() {
 
           <Form layout="vertical" onFinish={onFinish} autoComplete="off">
             <Form.Item
-              name="email"
+              name="account"
               rules={[
-                { required: true, message: '请输入邮箱' },
-                { type: 'email', message: '邮箱格式不正确' },
+                { required: true, message: '请输入邮箱或用户名' },
               ]}
             >
-              <Input prefix={<MailOutlined />} placeholder="邮箱" size="large" />
+              <Input prefix={<MailOutlined />} placeholder="邮箱或用户名" size="large" />
             </Form.Item>
 
             <Form.Item
@@ -66,6 +87,25 @@ export default function LoginPage() {
                 placeholder="密码"
                 size="large"
               />
+            </Form.Item>
+
+            <Form.Item
+              name="captchaText"
+              rules={[{ required: true, message: '请输入验证码' }]}
+            >
+              <Space style={{ width: '100%' }}>
+                <Input
+                  prefix={<SafetyOutlined />}
+                  placeholder="验证码"
+                  size="large"
+                  style={{ width: '60%' }}
+                />
+                <div
+                  style={{ width: '38%', cursor: 'pointer', height: 40 }}
+                  onClick={fetchCaptcha}
+                  dangerouslySetInnerHTML={{ __html: captchaSvg }}
+                />
+              </Space>
             </Form.Item>
 
             <Form.Item>

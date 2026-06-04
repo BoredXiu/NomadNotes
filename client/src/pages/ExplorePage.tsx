@@ -10,6 +10,7 @@ import {
 import {
   EnvironmentOutlined,
   CalendarOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -63,27 +64,15 @@ export default function ExplorePage() {
                 onClick={() => handleCardClick(trip.id)}
                 cover={
                   trip.coverImage ? (
-                    <div
-                      style={{
-                        height: 180,
-                        overflow: 'hidden',
-                        background: '#f0f2f5',
-                      }}
-                    >
-                      <img
-                        src={trip.coverImage}
-                        alt={trip.title}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                        }}
-                      />
-                    </div>
+                    <img
+                      alt={trip.title}
+                      src={trip.coverImage}
+                      style={{ height: 160, objectFit: 'cover' }}
+                    />
                   ) : (
                     <div
                       style={{
-                        height: 180,
+                        height: 160,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -125,8 +114,9 @@ export default function ExplorePage() {
                           </Text>
                         </Space>
                         <Space>
+                          <UserOutlined />
                           <Text type="secondary">
-                            {trip.User?.username ? `@${trip.User.username}` : ''}
+                            {trip.User?.username ? `${trip.User.username}` : ''}
                           </Text>
                         </Space>
                         {trip.isEnded === 1 ? (

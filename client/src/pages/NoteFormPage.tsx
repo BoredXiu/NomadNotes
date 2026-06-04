@@ -124,7 +124,7 @@ export default function NoteFormPage() {
           });
         }
         message.success('游记更新成功');
-        navigate(`/trip/${resolvedTripId}`);
+        navigate(`/trip/${resolvedTripId}?tab=notes`);
       } else {
         if (tempFiles.length === 0) {
           message.warning('请先上传图片');
@@ -140,7 +140,7 @@ export default function NoteFormPage() {
           })),
         });
         message.success('游记发布成功');
-        navigate(`/trip/${resolvedTripId}`);
+        navigate(`/trip/${resolvedTripId}?tab=notes`);
       }
     } catch {
       message.error(isEditing ? '更新游记失败' : '发布失败');

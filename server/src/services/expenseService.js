@@ -100,14 +100,16 @@ async function deleteExpense(expenseId, userId) {
 		throw new AppError("无权删除该账单", 403);
 	}
 
-	if (expense.receiptImage) {
-		try {
-			const absolutePath = join(__dirname, "..", "..", expense.receiptImage);
-			if (fs.existsSync(absolutePath)) {
-				fs.unlinkSync(absolutePath);
+	if (expense.receiptImages && Array.isArray(expense.receiptImages)) {
+		for (const imagePath of expense.receiptImages) {
+			try {
+				const absolutePath = join(__dirname, "..", "..", imagePath);
+				if (fs.existsSync(absolutePath)) {
+					fs.unlinkSync(absolutePath);
+				}
+			} catch (error) {
+				console.error("删除小票文件失败:", error.message);
 			}
-		} catch (error) {
-			console.error("删除小票文件失败:", error.message);
 		}
 	}
 
@@ -134,18 +136,22 @@ async function updateExpense(expenseId, userId, updateData) {
 		}
 	}
 
-	if (updateData.receiptImage !== undefined) {
-		if (expense.receiptImage && expense.receiptImage !== updateData.receiptImage) {
-			try {
-				const oldPath = join(__dirname, "..", "..", expense.receiptImage);
-				if (fs.existsSync(oldPath)) {
-					fs.unlinkSync(oldPath);
+	if (updateData.receiptImages !== undefined) {
+		if (expense.receiptImages && Array.isArray(expense.receiptImages)) {
+			for (const oldPath of expense.receiptImages) {
+				if (!updateData.receiptImages || !updateData.receiptImages.includes(oldPath)) {
+					try {
+						const absolutePath = join(__dirname, "..", "..", oldPath);
+						if (fs.existsSync(absolutePath)) {
+							fs.unlinkSync(absolutePath);
+						}
+					} catch (error) {
+						console.error("删除旧小票文件失败:", error.message);
+					}
 				}
-			} catch (error) {
-				console.error("删除旧小票文件失败:", error.message);
 			}
 		}
-		filteredData.receiptImage = updateData.receiptImage;
+		filteredData.receiptImages = updateData.receiptImages;
 	}
 
 	await expense.update(filteredData);

@@ -5,16 +5,25 @@ import {
   PlusOutlined,
   UserOutlined,
   CompassOutlined,
+  SunOutlined,
+  MoonOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
 import { NomadLogoIcon, MyTripIcon } from './NomadIcons';
+import SkateboardTabBar from './SkateboardTabBar';
 
 const { Header, Content } = Layout;
 const { Text } = Typography;
 
-export default function AppLayout() {
+interface AppLayoutProps {
+  children?: React.ReactNode;
+}
+
+export default function AppLayout({ children }: AppLayoutProps) {
   const { user, logout } = useAuthStore();
+  const { mode, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -26,7 +35,6 @@ export default function AppLayout() {
   const activeKey = (() => {
     if (location.pathname === '/') return '/';
     if (location.pathname.startsWith('/explore')) return '/explore';
-    if (location.pathname.startsWith('/trip')) return '/';
     return '';
   })();
 
@@ -90,6 +98,12 @@ export default function AppLayout() {
           </Space>
           <Button
             type="text"
+            icon={mode === 'dark' ? <SunOutlined /> : <MoonOutlined />}
+            onClick={toggleTheme}
+            style={{ color: '#fff' }}
+          />
+          <Button
+            type="text"
             icon={<LogoutOutlined />}
             onClick={handleLogout}
             style={{ color: '#fff' }}
@@ -102,8 +116,17 @@ export default function AppLayout() {
       <Tabs
         activeKey={activeKey}
         onChange={(key) => navigate(key)}
+        renderTabBar={() => (
+          <div style={{ padding: '0 24px' }}>
+            <SkateboardTabBar
+              activeKey={activeKey}
+              onChange={(key: string) => navigate(key)}
+              items={tabItems}
+            />
+          </div>
+        )}
         items={tabItems}
-        style={{ padding: '0 24px', marginBottom: 0 }}
+        style={{ marginBottom: 0 }}
       />
 
       <Content
@@ -114,7 +137,7 @@ export default function AppLayout() {
           width: '100%',
         }}
       >
-        <Outlet />
+        {children || <Outlet />}
       </Content>
     </Layout>
   );

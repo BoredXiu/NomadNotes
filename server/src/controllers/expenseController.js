@@ -7,7 +7,7 @@ async function createExpense(req, res, next) {
 			amount: req.body.amount,
 			expenseDate: req.body.expenseDate,
 			note: req.body.note || null,
-			receiptImage: req.body.receiptImage || null,
+			receiptImages: req.body.receiptImages || null,
 		};
 
 		const expense = await expenseService.createExpense(req.params.tripId, req.userId, expenseData);

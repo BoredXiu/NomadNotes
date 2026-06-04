@@ -3,8 +3,8 @@ import api from './client';
 export async function uploadImage(file: File): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await api.post<{ success: boolean; data: { url: string } }>('/upload', formData, {
+  const res = await api.post<{ success: boolean; data: { imageUrl: string } }>('/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return res.data.data.url;
+  return res.data.data.imageUrl;
 }

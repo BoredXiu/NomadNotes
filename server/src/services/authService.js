@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { Op } from "sequelize";
 import User from "../models/User.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/jwt.js";
 import { AppError } from "../utils/AppError.js";
@@ -43,15 +44,19 @@ async function register({ username, email, password }) {
 	};
 }
 
-async function login({ email, password }) {
-	const user = await User.findOne({ where: { email } });
+async function login({ account, password }) {
+	const user = await User.findOne({
+		where: {
+			[Op.or]: [{ email: account }, { username: account }],
+		},
+	});
 	if (!user) {
-		throw new AppError("邮箱或密码错误", 401);
+		throw new AppError("邮箱或用户名或密码错误", 401);
 	}
 
 	const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 	if (!isPasswordValid) {
-		throw new AppError("邮箱或密码错误", 401);
+		throw new AppError("邮箱或用户名或密码错误", 401);
 	}
 
 	const accessToken = generateAccessToken(user.id);

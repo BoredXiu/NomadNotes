@@ -27,14 +27,14 @@ const { Title } = Typography;
 interface TempFile {
   fileId: string;
   ext: string;
+  previewUrl: string;
 }
 
 export default function ExpenseFormPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
-  const [tempFile, setTempFile] = useState<TempFile | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [tempFiles, setTempFiles] = useState<TempFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [existingExpense, setExistingExpense] = useState<Expense | null>(null);
   const navigate = useNavigate();
@@ -70,8 +70,8 @@ export default function ExpenseFormPage() {
       const compressed = await compressImage(file, 750, 0.8);
       const compressedFile = new File([compressed], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
       const result = await expensesApi.uploadFileToTemp(compressedFile);
-      setTempFile({ fileId: result.fileId, ext: result.ext });
-      setPreviewUrl(URL.createObjectURL(compressedFile));
+      const previewUrl = URL.createObjectURL(compressedFile);
+      setTempFiles((prev) => [...prev, { fileId: result.fileId, ext: result.ext, previewUrl }]);
       message.success('图片已暂存');
     } catch {
       message.error('图片上传失败');
@@ -81,10 +81,14 @@ export default function ExpenseFormPage() {
     return false;
   };
 
-  const handleRemoveReceipt = () => {
-    setTempFile(null);
-    setPreviewUrl(null);
-    setExistingExpense((prev) => prev ? { ...prev, receiptImage: null } : null);
+  const handleRemoveReceipt = (index: number) => {
+    setTempFiles((prev) => {
+      const file = prev[index];
+      if (file) {
+        URL.revokeObjectURL(file.previewUrl);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const onFinish = async (values: {
@@ -96,11 +100,15 @@ export default function ExpenseFormPage() {
     if (!resolvedTripId) return;
     setLoading(true);
     try {
-      let receiptImage: string | null = null;
+      let receiptImages: string[] | null = null;
 
-      if (tempFile) {
-        const result = await expensesApi.persistSingle(tempFile.fileId, tempFile.ext);
-        receiptImage = result.imageUrl;
+      if (tempFiles.length > 0) {
+        const results = await expensesApi.persistMultiple(
+          tempFiles.map((f) => ({ fileId: f.fileId, ext: f.ext }))
+        );
+        receiptImages = results.map((r) => r.imageUrl);
+      } else if (isEditing && existingExpense?.receiptImages) {
+        receiptImages = existingExpense.receiptImages;
       }
 
       const data: Record<string, unknown> = {
@@ -109,16 +117,16 @@ export default function ExpenseFormPage() {
         expenseDate: values.expenseDate.format('YYYY-MM-DD HH:mm:ss'),
       };
       if (values.note) data.note = values.note;
-      if (receiptImage) data.receiptImage = receiptImage;
+      if (receiptImages) data.receiptImages = receiptImages;
 
       if (isEditing && expenseId) {
         await expensesApi.updateExpense(expenseId, data);
         message.success('账单更新成功');
-        navigate(`/trip/${resolvedTripId}`);
+        navigate(`/trip/${resolvedTripId}?tab=expenses`);
       } else {
         await expensesApi.createExpense(resolvedTripId, data);
         message.success('记账成功');
-        navigate(`/trip/${resolvedTripId}`);
+        navigate(`/trip/${resolvedTripId}?tab=expenses`);
       }
     } catch {
       message.error(isEditing ? '更新账单失败' : '记账失败');
@@ -135,7 +143,8 @@ export default function ExpenseFormPage() {
     );
   }
 
-  const displayImage = previewUrl || (isEditing && existingExpense?.receiptImage ? existingExpense.receiptImage : null);
+  const existingImages = isEditing && existingExpense?.receiptImages ? existingExpense.receiptImages : [];
+  const hasExistingImages = existingImages.length > 0;
 
   return (
     <Card style={{ maxWidth: 500, margin: '0 auto' }}>
@@ -194,74 +203,60 @@ export default function ExpenseFormPage() {
           <Input.TextArea rows={3} placeholder="可选备注" />
         </Form.Item>
 
-        {displayImage && tempFile ? (
-          <Form.Item label="小票照片">
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Image
-                src={displayImage}
-                alt="小票"
-                style={{ maxHeight: 200, objectFit: 'contain' }}
-              />
-              <Space>
-                <Upload
-                  maxCount={1}
-                  beforeUpload={handleBeforeUpload}
-                  accept="image/jpeg,image/png,image/webp"
-                  showUploadList={false}
-                >
-                  <Button icon={<UploadOutlined />} size="small" loading={uploading}>更换图片</Button>
-                </Upload>
-                <Button
-                  icon={<DeleteOutlined />}
-                  size="small"
-                  danger
-                  onClick={handleRemoveReceipt}
-                >
-                  删除图片
-                </Button>
+        <Form.Item label="小票照片">
+          <Space direction="vertical" style={{ width: '100%' }}>
+            {(hasExistingImages || tempFiles.length > 0) && (
+              <Space wrap>
+                {hasExistingImages && tempFiles.length === 0 && existingImages.map((img, idx) => (
+                  <div key={`existing-${idx}`} style={{ position: 'relative', display: 'inline-block' }}>
+                    <Image
+                      src={img}
+                      alt={`小票 ${idx + 1}`}
+                      width={100}
+                      height={100}
+                      style={{ objectFit: 'cover', borderRadius: 4 }}
+                    />
+                  </div>
+                ))}
+                {tempFiles.map((file, idx) => (
+                  <div key={`new-${idx}`} style={{ position: 'relative', display: 'inline-block' }}>
+                    <Image
+                      src={file.previewUrl}
+                      alt={`小票 ${idx + 1}`}
+                      width={100}
+                      height={100}
+                      style={{ objectFit: 'cover', borderRadius: 4 }}
+                    />
+                    <Button
+                      icon={<DeleteOutlined />}
+                      size="small"
+                      danger
+                      type="text"
+                      style={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        borderRadius: '50%',
+                        background: '#fff',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+                      }}
+                      onClick={() => handleRemoveReceipt(idx)}
+                    />
+                  </div>
+                ))}
               </Space>
-            </Space>
-          </Form.Item>
-        ) : displayImage ? (
-          <Form.Item label="小票照片">
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Image
-                src={displayImage}
-                alt="小票"
-                style={{ maxHeight: 200, objectFit: 'contain' }}
-              />
-              <Space>
-                <Upload
-                  maxCount={1}
-                  beforeUpload={handleBeforeUpload}
-                  accept="image/jpeg,image/png,image/webp"
-                  showUploadList={false}
-                >
-                  <Button icon={<UploadOutlined />} size="small" loading={uploading}>更换图片</Button>
-                </Upload>
-                <Button
-                  icon={<DeleteOutlined />}
-                  size="small"
-                  danger
-                  onClick={handleRemoveReceipt}
-                >
-                  删除图片
-                </Button>
-              </Space>
-            </Space>
-          </Form.Item>
-        ) : (
-          <Form.Item label="小票照片">
+            )}
             <Upload
-              maxCount={1}
               beforeUpload={handleBeforeUpload}
               accept="image/jpeg,image/png,image/webp"
               showUploadList={false}
             >
-              <Button icon={<UploadOutlined />} loading={uploading}>上传小票</Button>
+              <Button icon={<UploadOutlined />} loading={uploading}>
+                {tempFiles.length > 0 || hasExistingImages ? '添加更多图片' : '上传小票'}
+              </Button>
             </Upload>
-          </Form.Item>
-        )}
+          </Space>
+        </Form.Item>
 
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading} block>

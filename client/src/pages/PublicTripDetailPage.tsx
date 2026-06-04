@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Tabs,
   Typography,
@@ -16,6 +16,7 @@ import {
   Statistic,
   Table,
   Space,
+  Image,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -32,6 +33,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getPublicTripById } from '../api/trips';
 import { useAuthStore } from '../store/authStore';
 import { TripDetailSkeleton } from '../components/Skeletons';
+import SkateboardTabBar from '../components/SkateboardTabBar';
 import type { Trip, Expense, Note } from '../types';
 import dayjs from 'dayjs';
 import {
@@ -66,6 +68,7 @@ export default function PublicTripDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const currentUserId = useAuthStore((s) => s.user?.id);
+  const [activeTab, setActiveTab] = useState('overview');
 
   const { data: trip, isLoading, isError } = useQuery({
     queryKey: ['publicTrip', id],
@@ -161,11 +164,20 @@ export default function PublicTripDetailPage() {
       children: (
         <div>
           {tripData.coverImage && (
-            <div style={{ marginBottom: 24, borderRadius: 12, overflow: 'hidden', maxHeight: 400 }}>
-              <img
+            <div style={{ marginBottom: 24 }}>
+              <Image
                 src={tripData.coverImage}
                 alt={tripData.title}
-                style={{ width: '100%', objectFit: 'cover', display: 'block' }}
+                style={{
+                  width: '100%',
+                  maxHeight: 500,
+                  objectFit: 'cover',
+                  borderRadius: 12,
+                  cursor: 'pointer',
+                }}
+                preview={{
+                  mask: '查看大图',
+                }}
               />
             </div>
           )}
@@ -237,12 +249,14 @@ export default function PublicTripDetailPage() {
                       title: '日期',
                       dataIndex: 'expenseDate',
                       width: 180,
+                      align: 'center',
                       render: (d: string) => dayjs(d).format('YYYY-MM-DD HH:mm:ss'),
                     },
                     {
                       title: '分类',
                       dataIndex: 'category',
                       width: 100,
+                      align: 'center',
                       render: (c: string) => (
                         <Tag color={CATEGORY_COLORS[c] || '#a18cd1'}>{c}</Tag>
                       ),
@@ -251,7 +265,7 @@ export default function PublicTripDetailPage() {
                       title: '金额',
                       dataIndex: 'amount',
                       width: 120,
-                      align: 'right',
+                      align: 'center',
                       render: (a: number) => (
                         <Text strong style={{ color: '#ff4d4f' }}>
                           ¥{Number(a).toFixed(2)}
@@ -261,6 +275,7 @@ export default function PublicTripDetailPage() {
                     {
                       title: '备注',
                       dataIndex: 'note',
+                      align: 'center',
                       ellipsis: true,
                       render: (n: string) => n || '-',
                     },
@@ -283,11 +298,22 @@ export default function PublicTripDetailPage() {
             children: (
               <div>
                 <Timeline
+                  mode="left"
+                  className="custom-timeline"
                   items={notes.map((note: Note) => ({
                     dot: (
-                      <ClockCircleOutlined
-                        style={{ fontSize: 16, color: '#667eea' }}
-                      />
+                      <span
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'transparent',
+                        }}
+                      >
+                        <ClockCircleOutlined
+                          style={{ fontSize: 16, color: '#667eea', background: 'transparent' }}
+                        />
+                      </span>
                     ),
                     children: (
                       <Card
@@ -308,31 +334,23 @@ export default function PublicTripDetailPage() {
                           {note.content}
                         </Paragraph>
                         {note.images && note.images.length > 0 && (
-                          <Space wrap>
+                          <Space wrap size={[12, 12]}>
                             {note.images.map((img: string, i: number) => (
-                              <div
+                              <Image
                                 key={i}
+                                src={img}
+                                width={200}
+                                height={200}
                                 style={{
-                                  width: 120,
-                                  height: 120,
+                                  objectFit: 'cover',
                                   borderRadius: 8,
-                                  overflow: 'hidden',
                                   cursor: 'pointer',
                                   border: '1px solid #f0f0f0',
                                 }}
-                                onClick={() => window.open(img, '_blank')}
-                              >
-                                <img
-                                  src={img}
-                                  alt={`游记图片 ${i + 1}`}
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                    display: 'block',
-                                  }}
-                                />
-                              </div>
+                                preview={{
+                                  mask: '查看大图',
+                                }}
+                              />
                             ))}
                           </Space>
                         )}
@@ -529,7 +547,17 @@ export default function PublicTripDetailPage() {
         </Space>
       </div>
 
-      <Tabs defaultActiveKey="overview" items={tabItems} />
+      <SkateboardTabBar
+        activeKey={activeTab}
+        onChange={(key: string) => setActiveTab(key)}
+        items={tabItems}
+      />
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key: string) => setActiveTab(key)}
+        tabBarStyle={{ display: 'none' }}
+        items={tabItems}
+      />
     </div>
   );
 }

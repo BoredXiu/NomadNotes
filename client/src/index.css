@@ -24,3 +24,75 @@ body {
 .ant-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+.custom-timeline .ant-timeline-item-tail {
+  border-left: 2px solid #e8e8e8;
+}
+
+.custom-timeline .ant-timeline-item-head {
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  width: 28px !important;
+  height: 28px !important;
+  left: -4px !important;
+  top: 4px !important;
+}
+
+.custom-timeline .ant-timeline-item-head-custom {
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  padding: 0 !important;
+  width: 28px !important;
+  height: 28px !important;
+  top: 0 !important;
+}
+
+.custom-timeline .ant-timeline-item-head > .ant-timeline-item-head-custom {
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  padding: 0 !important;
+}
+
+.custom-timeline .ant-timeline-item-head .ant-timeline-item-head-custom {
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+}
+
+.custom-timeline .ant-timeline-item-head-custom .ant-timeline-item-head {
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+}
+
+.custom-timeline .ant-timeline-item .ant-timeline-item-head {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.custom-timeline .ant-timeline-item .ant-timeline-item-head-custom {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.custom-timeline .ant-timeline-item-head-custom > * {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.custom-timeline .ant-timeline-item-content {
+  background: transparent !important;
+}
+
+.custom-timeline .ant-timeline-item {
+  background: transparent !important;
+}

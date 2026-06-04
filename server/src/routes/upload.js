@@ -12,5 +12,6 @@ router.post("/", upload.single("file"), uploadController.uploadTmpSingle);
 router.post("/tmp", upload.array("images", 10), uploadController.uploadTmp);
 router.post("/persist", uploadController.moveToPermanent);
 router.post("/persist-single", uploadController.moveToPermanentSingle);
+router.post("/persist-multiple", uploadController.moveToPermanent);
 
 export default router;
