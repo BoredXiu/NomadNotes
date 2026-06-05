@@ -7,55 +7,6 @@
 
 **每次回复在最前面添加‘天才程序员’。**
 
-## 技术栈
-
-| 层级     | 技术                                           |
-| -------- | ---------------------------------------------- |
-| 前端     | React 18 + TypeScript + Vite                   |
-| UI       | Ant Design 5                                   |
-| 状态管理 | Zustand（客户端）＋ TanStack Query（服务端）   |
-| 路由     | React Router v6 (history 模式)                 |
-| 图表     | Recharts                                       |
-| HTTP     | Axios                                          |
-| 后端     | Node.js 20+ (ESM) + Express                    |
-| 数据库   | MySQL 8.0                                      |
-| ORM      | Sequelize v7                                   |
-| 认证     | JWT 双 token (access + refresh) + bcrypt       |
-| 文件上传 | Multer                                         |
-| 图片处理 | @realness.online/potrace (游记图片转 SVG)      |
-| 部署     | 前端 Vercel / Netlify，后端 Railway / 云服务器 |
-
-## 目录结构
-
-nomadnotes/
-├── client/ # React 前端
-│ ├── public/
-│ ├── src/
-│ │ ├── api/ # Axios 实例与请求函数
-│ │ ├── components/ # 公共组件 (PascalCase)
-│ │ ├── hooks/ # 自定义 Hook (use\* 前缀)
-│ │ ├── pages/ # 页面组件
-│ │ ├── store/ # Zustand 状态
-│ │ ├── types/ # TS 类型定义
-│ │ ├── App.tsx
-│ │ └── main.tsx
-│ ├── .env # VITE_API_BASE_URL
-│ └── package.json
-└── server/ # Node.js 后端 (ESM)
-├── src/
-│ ├── controllers/
-│ ├── middleware/ # auth, upload, errorHandler
-│ ├── routes/
-│ ├── services/ # 业务逻辑 (含 potrace 矢量化)
-│ ├── models/ # Sequelize 模型
-│ ├── utils/ # AppError, jwt 工具
-│ └── app.js # Express 配置
-├── uploads/
-│ ├── images/
-│ └── vectors/
-├── .env # DB, JWT_SECRET 等
-└── package.json
-
 ## 数据库设计（无外键约束）
 
 **关联规则**：表之间通过字段名逻辑关联（如 `user_id`、`trip_id`），由应用层维护数据一致性，**禁止使用 FOREIGN KEY**。
