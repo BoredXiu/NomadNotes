@@ -17,11 +17,12 @@
 			</div>
 
 			<!-- 导出格式选择 -->
-			<div>
-				<div style="margin-bottom: 8px; font-weight: 500">导出格式</div>
+			<div style="display: flex; align-items: center; gap: 12px">
+				<span style="font-weight: 500; white-space: nowrap; min-width: 70px">导出格式</span>
 				<el-select
 					v-model="format"
-					style="width: 100%"
+					size="large"
+					style="flex: 1; min-width: 0; width: 10rem"
 				>
 					<el-option
 						v-for="opt in formatOptions"
@@ -38,11 +39,11 @@
 			</div>
 
 			<!-- 导出范围 -->
-			<div>
-				<div style="margin-bottom: 8px; font-weight: 500">导出范围</div>
+			<div style="display: flex; align-items: center; gap: 12px">
+				<span style="font-weight: 500; white-space: nowrap; min-width: 70px">导出范围</span>
 				<el-checkbox
 					v-model="isExportAll"
-					@change="handleToggleExportAll"
+					size="large"
 				>
 					导出全部游记（共 {{ notes.length }} 篇）
 				</el-checkbox>
@@ -110,8 +111,8 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, computed } from "vue";
-	import { Download } from "@element-plus/icons-vue";
+	import { ref, computed, watch } from "vue";
+	import { Download, Document } from "@element-plus/icons-vue";
 	import { ElMessage } from "element-plus";
 	import type { ExportFormat, ExportParams } from "../api/export";
 	import { exportNotes, downloadBlob } from "../api/export";
@@ -131,9 +132,9 @@
 	}>();
 
 	const formatOptions = [
-		{ value: "html" as ExportFormat, label: "HTML 网页", icon: "Document", ext: ".html" },
-		{ value: "markdown" as ExportFormat, label: "Markdown 文档", icon: "Tickets", ext: ".md" },
-		{ value: "pdf" as ExportFormat, label: "PDF 文档", icon: "Document", ext: ".pdf" },
+		{ value: "html" as ExportFormat, label: "HTML 网页", icon: Document, ext: ".html" },
+		{ value: "markdown" as ExportFormat, label: "Markdown 文档", icon: Document, ext: ".md" },
+		{ value: "pdf" as ExportFormat, label: "PDF 文档", icon: Document, ext: ".pdf" },
 	];
 
 	const format = ref<ExportFormat>("html");
@@ -147,12 +148,24 @@
 		return dateStr ? new Date(dateStr).toLocaleDateString("zh-CN") : "";
 	}
 
-	function handleToggleExportAll() {
-		isExportAll.value = !isExportAll.value;
-		if (!isExportAll.value) {
+	// 监听导出范围切换，取消"导出全部"时清空已选
+	watch(isExportAll, (val) => {
+		if (!val) {
 			selectedNoteIds.value = [];
 		}
-	}
+	});
+
+	// 监听弹窗打开，重置状态
+	watch(
+		() => props.open,
+		(val) => {
+			if (val) {
+				isExportAll.value = true;
+				selectedNoteIds.value = [];
+				format.value = "html";
+			}
+		},
+	);
 
 	function handleNoteSelect(noteId: string, checked: boolean) {
 		if (checked) {
@@ -226,3 +239,40 @@
 		}
 	}
 </script>
+
+<style scoped lang="scss">
+	/* 暗黑主题支持 */
+	.dark-theme :deep(.el-dialog) {
+		background-color: #1f1f1f !important;
+	}
+
+	.dark-theme :deep(.el-dialog__title) {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme :deep(.el-dialog__body) {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .export-info-box {
+		background: #1a2e1a !important;
+		border-color: #2a4a2a !important;
+		color: #73d13d !important;
+	}
+
+	.dark-theme .export-note-list {
+		border-color: #303030 !important;
+	}
+
+	.dark-theme .export-note-item span {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .export-warning {
+		color: #d48806 !important;
+	}
+
+	.dark-theme .export-no-notes {
+		color: #8c8c8c !important;
+	}
+</style>

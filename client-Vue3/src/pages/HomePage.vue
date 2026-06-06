@@ -1,6 +1,6 @@
 <template>
-	<div>
-		<h3 style="margin-bottom: 24px">我的旅程</h3>
+	<div ref="pageRef">
+		<h2 class="home-page-title">我的旅程</h2>
 
 		<CardListSkeleton
 			v-if="loading"
@@ -14,6 +14,7 @@
 
 		<el-row
 			v-else
+			ref="listRef"
 			:gutter="16"
 		>
 			<el-col
@@ -67,16 +68,22 @@
 								>
 							</el-space>
 						</div>
-						<div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #666">
+						<div
+							class="trip-card-info"
+							style="display: flex; flex-direction: column; gap: 4px; font-size: 13px"
+						>
 							<div>
 								<el-icon style="margin-right: 4px"><Location /></el-icon>
 								{{ trip.destination }}
 							</div>
-							<div style="color: #999">
+							<div class="trip-card-info-secondary">
 								<el-icon style="margin-right: 4px"><Timer /></el-icon>
 								{{ formatDate(trip.startDate) }} - {{ formatDate(trip.endDate) }}
 							</div>
-							<div style="display: flex; gap: 12px; color: #999">
+							<div
+								class="trip-card-info-secondary"
+								style="display: flex; gap: 12px"
+							>
 								<span>
 									<el-icon style="margin-right: 4px"><Money /></el-icon>
 									{{ trip.expenseCount }} 笔账单
@@ -90,34 +97,26 @@
 					</div>
 
 					<!-- 操作按钮区域（底部，与 Ant Design Card actions 一致） -->
-					<div style="display: flex; justify-content: flex-end; border-top: 1px solid #f0f0f0; padding: 0 12px; background: #fafafa">
+					<div class="trip-card-actions">
 						<el-button
+							class="trip-card-action-btn"
 							text
 							:icon="Edit"
 							size="small"
 							@click.stop="router.push(`/trip/${trip.id}/edit`)"
 						/>
+						<div class="trip-card-action-divider" />
 						<el-popconfirm
 							title="确定要删除这个旅程吗？所有账单和游记也会被删除。"
 							@confirm="handleDelete(trip.id)"
 						>
 							<template #reference>
 								<el-button
+									class="trip-card-action-btn trip-card-action-btn-delete"
 									text
 									:icon="Delete"
 									size="small"
-									type="danger"
 									@click.stop
-									@mouseenter="
-										(e: MouseEvent) => {
-											(e.currentTarget as HTMLElement).style.color = '#ff7875';
-										}
-									"
-									@mouseleave="
-										(e: MouseEvent) => {
-											(e.currentTarget as HTMLElement).style.color = '';
-										}
-									"
 								/>
 							</template>
 						</el-popconfirm>
@@ -139,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, onMounted } from "vue";
+	import { ref, onMounted, watch } from "vue";
 	import { useRouter } from "vue-router";
 	import { Edit, Delete, Location, Timer, Money, Document } from "@element-plus/icons-vue";
 	import { ElMessage } from "element-plus";
@@ -148,6 +147,7 @@
 	import CardListSkeleton from "../components/CardListSkeleton.vue";
 	import type { Trip } from "../types";
 	import dayjs from "dayjs";
+	import { usePageEnter, useStaggerList } from "../composables/useGsapAnimations";
 
 	const router = useRouter();
 	const trips = ref<Trip[]>([]);
@@ -155,6 +155,10 @@
 	const total = ref(0);
 	const currentPage = ref(1);
 	const pageSize = 50;
+
+	// GSAP 动画
+	const pageRef = usePageEnter(0);
+	const { containerRef: listRef, animate: animateList } = useStaggerList(0.06, 0.2);
 
 	function formatDate(dateStr: string) {
 		return dayjs(dateStr).format("YYYY-MM-DD HH:mm:ss");
@@ -191,4 +195,88 @@
 	onMounted(() => {
 		loadTrips();
 	});
+
+	// trips 数据变化后重新触发交错动画
+	watch(trips, () => {
+		animateList();
+	});
 </script>
+
+<style scoped lang="scss">
+	.home-page-title {
+		margin-bottom: 24px;
+		font-size: 24px;
+		font-weight: 600;
+	}
+
+	.trip-card-actions {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		border-top: 1px solid #f0f0f0;
+		padding: 0;
+		background: #fafafa;
+	}
+
+	.trip-card-action-btn {
+		flex: 1;
+		height: 46px;
+		color: rgba(0, 0, 0, 0.45);
+		transition: color 0.3s;
+	}
+
+	.trip-card-action-btn:hover {
+		color: #1890ff;
+	}
+
+	.trip-card-action-btn-delete:hover {
+		color: #ff7875;
+	}
+
+	.trip-card-action-divider {
+		width: 1px;
+		height: 24px;
+		background: #f0f0f0;
+	}
+
+	.trip-card-info {
+		color: #666;
+	}
+
+	.trip-card-info-secondary {
+		color: #999;
+	}
+	/* 暗黑主题支持 */
+	.dark-theme .home-page-title {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .trip-card-actions {
+		border-top-color: #303030 !important;
+		background: #1a1a1a !important;
+	}
+
+	.dark-theme .trip-card-action-btn {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+
+	.dark-theme .trip-card-action-btn:hover {
+		color: #667eea !important;
+	}
+
+	.dark-theme .trip-card-action-btn-delete:hover {
+		color: #ff7875 !important;
+	}
+
+	.dark-theme .trip-card-action-divider {
+		background: #303030 !important;
+	}
+
+	.dark-theme .trip-card-info {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .trip-card-info-secondary {
+		color: #8c8c8c !important;
+	}
+</style>

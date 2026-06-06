@@ -1,7 +1,10 @@
 <template>
-	<div>
+	<div
+		class="note-detail-page"
+		ref="pageRef"
+	>
 		<!-- 面包屑导航 -->
-		<el-breadcrumb style="margin-bottom: 16px">
+		<el-breadcrumb class="note-detail-breadcrumb">
 			<el-breadcrumb-item :to="{ path: '/' }">我的旅程</el-breadcrumb-item>
 			<el-breadcrumb-item :to="{ path: `/trip/${note?.tripId}` }">
 				{{ tripTitle || "旅程" }}
@@ -9,7 +12,7 @@
 			<el-breadcrumb-item> {{ formatDate(note?.noteDate) }} 游记 </el-breadcrumb-item>
 		</el-breadcrumb>
 
-		<el-space style="margin-bottom: 16px">
+		<el-space class="note-detail-back">
 			<el-button
 				:icon="ArrowLeft"
 				type="text"
@@ -23,11 +26,11 @@
 		/>
 
 		<el-card v-if="note">
-			<h4 style="font-size: 16px; font-weight: 600; margin-bottom: 8px">游记 - {{ formatDate(note.noteDate) }}</h4>
-			<span style="color: rgba(0, 0, 0, 0.45); font-size: 14px"> 创建于 {{ formatDate(note.createdAt) }} </span>
+			<h4 class="note-detail-title">游记 - {{ formatDate(note.noteDate) }}</h4>
+			<span class="note-detail-date"> 创建于 {{ formatDate(note.createdAt) }} </span>
 
 			<!-- 游记内容 -->
-			<div style="margin: 24px 0; white-space: pre-wrap; line-height: 1.8; font-size: 16px">
+			<div class="note-detail-content">
 				{{ note.content }}
 			</div>
 
@@ -43,14 +46,15 @@
 						:src="img"
 						:preview-src-list="note.images"
 						:initial-index="i"
-						style="width: 200px; border-radius: 8px; cursor: pointer"
+						preview-teleported
+						class="note-detail-image"
 						fit="cover"
 					/>
 				</el-space>
 			</div>
 
 			<!-- 操作按钮 -->
-			<div style="margin-top: 24px; text-align: right">
+			<div class="note-detail-actions">
 				<el-space>
 					<el-button
 						:icon="Edit"
@@ -85,11 +89,15 @@
 	import { getTripById } from "../api/trips";
 	import type { Note } from "../types";
 	import dayjs from "dayjs";
+	import { useFadeIn } from "../composables/useGsapAnimations";
 
 	const route = useRoute();
 	const router = useRouter();
-	const loading = ref(true);
 	const note = ref<Note | null>(null);
+	const loading = ref(true);
+
+	// GSAP 动画
+	const pageRef = useFadeIn(0);
 	const tripTitle = ref("");
 
 	function formatDate(dateStr: string | undefined) {
@@ -125,3 +133,84 @@
 		}
 	});
 </script>
+
+<style scoped lang="scss">
+	.note-detail-page {
+		max-width: 800px;
+		margin: 0 auto;
+	}
+
+	.note-detail-breadcrumb {
+		margin-bottom: 16px;
+	}
+
+	.note-detail-back {
+		margin-bottom: 16px;
+	}
+
+	.note-detail-title {
+		font-size: 16px;
+		font-weight: 600;
+		margin-bottom: 8px;
+	}
+
+	.note-detail-date {
+		color: rgba(0, 0, 0, 0.45);
+		font-size: 14px;
+	}
+
+	.note-detail-content {
+		margin: 24px 0;
+		white-space: pre-wrap;
+		line-height: 1.8;
+		font-size: 16px;
+	}
+
+	.note-detail-image {
+		width: 200px;
+		border-radius: 8px;
+		cursor: pointer;
+	}
+
+	.note-detail-actions {
+		margin-top: 24px;
+		text-align: right;
+	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .note-detail-page {
+		background-color: #141414 !important;
+	}
+
+	.dark-theme .note-detail-title {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .note-detail-date {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+
+	.dark-theme .note-detail-content {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .note-detail-image {
+		border-color: #303030 !important;
+	}
+
+	.dark-theme .note-detail-breadcrumb :deep(.el-breadcrumb__inner) {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .note-detail-breadcrumb :deep(.el-breadcrumb__inner a) {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .note-detail-breadcrumb :deep(.el-breadcrumb__separator) {
+		color: #595959 !important;
+	}
+
+	.dark-theme .note-detail-actions {
+		border-top-color: #303030 !important;
+	}
+</style>

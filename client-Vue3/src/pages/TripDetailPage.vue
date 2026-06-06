@@ -1,169 +1,127 @@
 <template>
-	<div style="max-width: 800px; margin: 0 auto">
-		<SkateboardNav
-			:title="tripTitle"
-			show-back
-		/>
-
-		<SkateboardTabBar
-			:active-key="activeTab"
-			:items="tabItems"
-			@update:active-key="setActiveTab"
-		/>
-
-		<!-- 概览 Tab -->
-		<div
-			v-if="activeTab === 'overview'"
-			v-loading="loading"
+	<div
+		class="trip-detail-page"
+		ref="pageRef"
+	>
+		<!-- 面包屑导航 -->
+		<el-breadcrumb
+			v-if="trip"
+			separator="/"
+			class="trip-detail-breadcrumb"
 		>
-			<el-empty
-				v-if="!trip"
-				description="旅程不存在"
-			/>
+			<el-breadcrumb-item>
+				<router-link to="/">我的旅程</router-link>
+			</el-breadcrumb-item>
+			<el-breadcrumb-item>{{ trip.title }}</el-breadcrumb-item>
+		</el-breadcrumb>
 
-			<template v-if="trip">
-				<el-card style="margin-bottom: 16px">
-					<el-descriptions
-						:column="2"
-						border
-					>
-						<el-descriptions-item label="目的地">{{ trip.destination }}</el-descriptions-item>
-						<el-descriptions-item label="状态">
-							<el-tag :type="trip.isEnded ? 'primary' : 'success'">
-								{{ trip.isEnded ? "已结束" : "进行中" }}
-							</el-tag>
-						</el-descriptions-item>
-						<el-descriptions-item label="开始">
-							{{ formatDate(trip.startDate) }}
-						</el-descriptions-item>
-						<el-descriptions-item label="结束">
-							{{ trip.endDate ? formatDate(trip.endDate) : "未设置" }}
-						</el-descriptions-item>
-					</el-descriptions>
-
+		<!-- 顶部信息卡片 -->
+		<el-card
+			class="trip-detail-header-card"
+			v-if="trip"
+		>
+			<div class="trip-detail-header">
+				<div class="trip-detail-header-left">
 					<el-button
-						type="primary"
-						style="margin-top: 12px"
+						text
+						@click="router.push('/')"
+					>
+						<el-icon><ArrowLeft /></el-icon>
+					</el-button>
+					<h2 class="trip-detail-title">
+						{{ trip.title }}
+						<el-tag
+							:type="trip.isEnded ? 'info' : 'success'"
+							:effect="trip.isEnded ? 'plain' : 'light'"
+							size="small"
+							style="margin-left: 8px"
+						>
+							{{ trip.isEnded ? "已结束" : "进行中" }}
+						</el-tag>
+					</h2>
+				</div>
+				<div class="trip-detail-header-right">
+					<el-button
+						v-if="!trip.isEnded"
+						@click="handleEndTrip"
+						size="default"
+					>
+						结束旅程
+					</el-button>
+					<el-switch
+						v-model="isPublic"
+						@update:model-value="handleTogglePublic"
+						active-text="公开"
+						inactive-text="私密"
+						inline-prompt
+					/>
+					<el-button
 						:icon="Edit"
 						@click="router.push(`/trip/${trip.id}/edit`)"
 					>
-						编辑旅程
+						编辑
 					</el-button>
-				</el-card>
+				</div>
+			</div>
+		</el-card>
 
-				<!-- 快速操作卡片 -->
-				<el-row
-					:gutter="16"
-					style="margin-top: 16px"
-				>
-					<el-col
-						:xs="24"
-						:sm="8"
-						style="margin-bottom: 16px"
-					>
-						<el-card
-							style="cursor: pointer; text-align: center; padding: 8px"
-							shadow="hover"
-							@click="setActiveTab('expenses')"
-						>
-							<el-icon
-								:size="32"
-								color="#52c41a"
-								><Money
-							/></el-icon>
-							<div style="margin-top: 8px; font-weight: 500">消费管理</div>
-							<div style="color: #999; font-size: 13px">{{ expenseCount }} 笔账单</div>
-						</el-card>
-					</el-col>
-					<el-col
-						:xs="24"
-						:sm="8"
-						style="margin-bottom: 16px"
-					>
-						<el-card
-							style="cursor: pointer; text-align: center; padding: 8px"
-							shadow="hover"
-							@click="setActiveTab('notes')"
-						>
-							<el-icon
-								:size="32"
-								color="#722ed1"
-								><Document
-							/></el-icon>
-							<div style="margin-top: 8px; font-weight: 500">游记编写</div>
-							<div style="color: #999; font-size: 13px">{{ noteCount }} 篇游记</div>
-						</el-card>
-					</el-col>
-					<el-col
-						:xs="24"
-						:sm="8"
-						style="margin-bottom: 16px"
-					>
-						<el-card
-							style="cursor: pointer; text-align: center; padding: 8px"
-							shadow="hover"
-							@click="showExportModal = true"
-						>
-							<el-icon
-								:size="32"
-								color="#1890ff"
-								><Download
-							/></el-icon>
-							<div style="margin-top: 8px; font-weight: 500">导出报告</div>
-							<div style="color: #999; font-size: 13px">HTML / Markdown / PDF</div>
-						</el-card>
-					</el-col>
-				</el-row>
+		<!-- 导航和标签栏 -->
+		<SkateboardNav
+			v-if="!trip"
+			title="旅程详情"
+			show-back
+		/>
 
-				<!-- 消费统计图 -->
-				<el-card
-					title="消费统计"
-					style="margin-top: 16px"
-				>
-					<div
-						v-if="statsData"
-						style="width: 100%; height: 300px"
-					>
-						<v-chart
-							:option="pieChartOption"
-							autoresize
-						/>
-					</div>
-					<el-empty
-						v-else
-						description="暂无消费数据"
-					/>
-				</el-card>
-			</template>
+		<!-- 标签栏和导出按钮 -->
+		<div class="trip-detail-tab-bar-row">
+			<SkateboardTabBar
+				:active-key="activeTab"
+				:items="tabItems"
+				@update:active-key="setActiveTab"
+			/>
+			<el-button
+				v-if="notes.length > 0 || expenses.length > 0"
+				:icon="Download"
+				@click="showExportModal = true"
+				class="export-notes-btn"
+			>
+				导出游记
+			</el-button>
 		</div>
 
 		<!-- 账单 Tab -->
 		<div v-if="activeTab === 'expenses'">
-			<el-button
-				type="primary"
-				:icon="Plus"
-				style="margin-bottom: 16px"
-				@click="router.push(`/trip/${tripId}/expense/new`)"
-			>
-				添加账单
-			</el-button>
+			<div class="trip-detail-tab-header">
+				<el-button
+					type="primary"
+					:icon="Plus"
+					@click="router.push(`/trip/${tripId}/expense/new`)"
+				>
+					记一笔
+				</el-button>
+			</div>
 
-			<el-empty
-				v-if="expenses.length === 0"
-				description="暂无账单记录"
-			/>
+			<div
+				v-if="expenses.length === 0 && !loading"
+				class="expenses-empty-container"
+			>
+				<el-empty description="暂无账单记录" />
+			</div>
 
 			<el-table
+				v-else
 				:data="expenses"
 				v-loading="loading"
 				style="width: 100%"
 				show-summary
 				:summary-method="getSummaries"
+				:empty-text="''"
 			>
 				<el-table-column
 					prop="expenseDate"
 					label="日期"
 					width="120"
+					align="center"
 				>
 					<template #default="{ row }">
 						{{ formatDate(row.expenseDate) }}
@@ -173,6 +131,7 @@
 					prop="category"
 					label="分类"
 					width="100"
+					align="center"
 				>
 					<template #default="{ row }">
 						<el-tag>{{ row.category }}</el-tag>
@@ -182,48 +141,76 @@
 					prop="amount"
 					label="金额"
 					width="120"
+					align="center"
 				>
 					<template #default="{ row }">
-						{{ currencyStore.getCurrencySymbol() }}{{ currencyStore.convertAmount(row.amount, row.currency || "CNY") }}
-						<span
-							v-if="currencyStore.currency !== 'CNY'"
-							style="font-size: 11px; color: #999"
-						>
-							(原: ¥{{ row.amount }})
-						</span>
+						<span class="expense-amount"> {{ currencyStore.getCurrencySymbol() }}{{ currencyStore.convertAmount(row.amount, row.currency || "CNY") }} </span>
 					</template>
 				</el-table-column>
 				<el-table-column
 					prop="note"
 					label="备注"
-					min-width="150"
+					min-width="120"
+					align="center"
 				>
 					<template #default="{ row }">
 						{{ row.note || "-" }}
 					</template>
 				</el-table-column>
 				<el-table-column
-					label="操作"
+					label="小票"
 					width="100"
+					align="center"
 				>
 					<template #default="{ row }">
-						<el-button
-							text
-							:icon="Edit"
-							@click="router.push(`/trip/${tripId}/expense/${row.id}/edit`)"
-						/>
-						<el-popconfirm
-							title="确定删除此账单?"
-							@confirm="handleDeleteExpense(row.id)"
+						<el-space
+							v-if="row.receiptImages && row.receiptImages.length > 0"
+							wrap
+							:size="4"
 						>
-							<template #reference>
-								<el-button
-									text
-									:icon="Delete"
-									type="danger"
-								/>
-							</template>
-						</el-popconfirm>
+							<el-image
+								v-for="(img, i) in row.receiptImages"
+								:key="i"
+								:src="img"
+								style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer"
+								fit="cover"
+								:preview-src-list="row.receiptImages"
+								:initial-index="Number(i)"
+								preview-teleported
+							/>
+						</el-space>
+						<span
+							v-else
+							style="color: #999"
+							>-</span
+						>
+					</template>
+				</el-table-column>
+				<el-table-column
+					label="操作"
+					width="140"
+					align="center"
+				>
+					<template #default="{ row }">
+						<el-space>
+							<el-button
+								text
+								:icon="Edit"
+								@click="router.push(`/trip/${tripId}/expense/${row.id}/edit`)"
+							/>
+							<el-popconfirm
+								title="确定删除此账单?"
+								@confirm="handleDeleteExpense(row.id)"
+							>
+								<template #reference>
+									<el-button
+										text
+										:icon="Delete"
+										type="danger"
+									/>
+								</template>
+							</el-popconfirm>
+						</el-space>
 					</template>
 				</el-table-column>
 			</el-table>
@@ -241,14 +228,15 @@
 
 		<!-- 游记 Tab -->
 		<div v-if="activeTab === 'notes'">
-			<el-button
-				type="primary"
-				:icon="Plus"
-				style="margin-bottom: 16px"
-				@click="router.push(`/trip/${tripId}/note/new`)"
-			>
-				写游记
-			</el-button>
+			<div class="trip-detail-tab-header">
+				<el-button
+					type="primary"
+					:icon="Plus"
+					@click="router.push(`/trip/${tripId}/note/new`)"
+				>
+					写游记
+				</el-button>
+			</div>
 
 			<el-empty
 				v-if="notes.length === 0"
@@ -297,6 +285,7 @@
 								style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer"
 								:preview-src-list="row.images"
 								:initial-index="idx"
+								preview-teleported
 								fit="cover"
 							/>
 						</el-space>
@@ -337,6 +326,244 @@
 			</el-table>
 		</div>
 
+		<!-- 统计 Tab -->
+		<div v-if="activeTab === 'stats'">
+			<div class="trip-detail-tab-header">
+				<CurrencySwitcher />
+			</div>
+
+			<el-empty
+				v-if="expenses.length === 0 && notes.length === 0"
+				description="暂无消费数据与游记数据"
+			/>
+
+			<template v-if="expenses.length > 0 || notes.length > 0">
+				<!-- 统计卡片 -->
+				<el-row
+					:gutter="16"
+					style="margin-bottom: 24px"
+				>
+					<el-col
+						:xs="24"
+						:sm="12"
+						:lg="6"
+					>
+						<el-card>
+							<div class="stat-card">
+								<div class="stat-card-title">总支出</div>
+								<div class="stat-card-value stat-card-value-red">
+									{{ currencyStore.getCurrencySymbol() }}{{ currencyStore.convertAmount(statsSummary.total).toFixed(currencyStore.currency === "JPY" ? 0 : 2) }}
+								</div>
+							</div>
+						</el-card>
+					</el-col>
+					<el-col
+						:xs="24"
+						:sm="12"
+						:lg="6"
+					>
+						<el-card>
+							<div class="stat-card">
+								<div class="stat-card-title">日均支出</div>
+								<div class="stat-card-value stat-card-value-blue">
+									{{ currencyStore.getCurrencySymbol()
+									}}{{ currencyStore.convertAmount(statsSummary.avgPerDay).toFixed(currencyStore.currency === "JPY" ? 0 : 2) }}
+								</div>
+							</div>
+						</el-card>
+					</el-col>
+					<el-col
+						:xs="24"
+						:sm="12"
+						:lg="6"
+					>
+						<el-card>
+							<div class="stat-card">
+								<div class="stat-card-title">消费笔数</div>
+								<div class="stat-card-value stat-card-value-purple">{{ statsSummary.count }} 笔</div>
+							</div>
+						</el-card>
+					</el-col>
+					<el-col
+						:xs="24"
+						:sm="12"
+						:lg="6"
+					>
+						<el-card>
+							<div class="stat-card">
+								<div class="stat-card-title">最高消费类别</div>
+								<div class="stat-card-value stat-card-value-orange">
+									{{ statsSummary.maxCategory || "暂无" }}
+								</div>
+							</div>
+						</el-card>
+					</el-col>
+				</el-row>
+
+				<!-- 游记统计卡片 -->
+				<el-row
+					:gutter="16"
+					style="margin-bottom: 24px"
+				>
+					<el-col
+						:xs="24"
+						:sm="12"
+						:lg="8"
+					>
+						<el-card>
+							<div class="stat-card">
+								<div class="stat-card-title">游记篇数</div>
+								<div class="stat-card-value stat-card-value-green">{{ statsSummary.noteCount }} 篇</div>
+							</div>
+						</el-card>
+					</el-col>
+					<el-col
+						:xs="24"
+						:sm="12"
+						:lg="8"
+					>
+						<el-card>
+							<div class="stat-card">
+								<div class="stat-card-title">游记图片数</div>
+								<div class="stat-card-value stat-card-value-cyan">{{ statsSummary.totalImages }} 张</div>
+							</div>
+						</el-card>
+					</el-col>
+					<el-col
+						:xs="24"
+						:sm="12"
+						:lg="8"
+					>
+						<el-card>
+							<div class="stat-card">
+								<div class="stat-card-title">游记配图率</div>
+								<div class="stat-card-value stat-card-value-pink">
+									{{ statsSummary.noteCount > 0 ? (statsSummary.totalImages / statsSummary.noteCount).toFixed(1) : "0.0" }} 张/篇
+								</div>
+							</div>
+						</el-card>
+					</el-col>
+				</el-row>
+
+				<!-- 消费分类分布饼图 -->
+				<el-row
+					:gutter="16"
+					v-if="statsData && statsData.categories.length > 0"
+				>
+					<el-col
+						:xs="24"
+						:lg="12"
+					>
+						<el-card
+							title="消费分类分布"
+							style="margin-bottom: 16px"
+						>
+							<div style="width: 100%; height: 350px">
+								<v-chart
+									:option="pieChartOption"
+									autoresize
+								/>
+							</div>
+						</el-card>
+					</el-col>
+					<el-col
+						:xs="24"
+						:lg="12"
+					>
+						<el-card
+							title="每日消费趋势"
+							style="margin-bottom: 16px"
+						>
+							<div style="width: 100%; height: 350px">
+								<v-chart
+									:option="barChartOption"
+									autoresize
+								/>
+							</div>
+						</el-card>
+					</el-col>
+				</el-row>
+
+				<!-- 分类明细表格 -->
+				<el-card
+					v-if="statsData && statsData.categories.length > 0"
+					title="分类明细"
+					size="small"
+					style="margin-top: 16px"
+				>
+					<el-table
+						:data="statsData.categories"
+						row-key="category"
+					>
+						<el-table-column
+							prop="category"
+							label="分类"
+							align="center"
+						>
+							<template #default="{ row }">
+								<el-tag>{{ row.category }}</el-tag>
+							</template>
+						</el-table-column>
+						<el-table-column
+							prop="count"
+							label="笔数"
+							align="center"
+						/>
+						<el-table-column
+							prop="total"
+							label="金额"
+							align="center"
+						>
+							<template #default="{ row }">
+								<span class="expense-amount">
+									{{ currencyStore.getCurrencySymbol() }}{{ currencyStore.convertAmount(row.total).toFixed(currencyStore.currency === "JPY" ? 0 : 2) }}
+								</span>
+							</template>
+						</el-table-column>
+						<el-table-column
+							label="占比"
+							align="right"
+						>
+							<template #default="{ row }"> {{ statsData.total > 0 ? ((row.total / statsData.total) * 100).toFixed(1) : "0.0" }}% </template>
+						</el-table-column>
+					</el-table>
+				</el-card>
+			</template>
+		</div>
+
+		<!-- 概览 Tab -->
+		<div v-if="activeTab === 'overview'">
+			<el-descriptions
+				v-if="trip"
+				:column="3"
+				border
+				class="overview-descriptions"
+			>
+				<el-descriptions-item label="目的地">
+					{{ trip.destination || "-" }}
+				</el-descriptions-item>
+				<el-descriptions-item label="开始日期">
+					{{ formatDate(trip.startDate) }}
+				</el-descriptions-item>
+				<el-descriptions-item label="结束日期">
+					{{ trip.endDate ? formatDate(trip.endDate) : "-" }}
+				</el-descriptions-item>
+				<el-descriptions-item label="状态">
+					<el-tag
+						:type="trip.isEnded ? 'info' : 'success'"
+						effect="plain"
+					>
+						{{ trip.isEnded ? "已结束" : "进行中" }}
+					</el-tag>
+				</el-descriptions-item>
+				<el-descriptions-item label="消费笔数"> {{ expenseCount }} 笔 </el-descriptions-item>
+				<el-descriptions-item label="游记篇数"> {{ noteCount }} 篇 </el-descriptions-item>
+				<el-descriptions-item label="创建时间">
+					{{ formatDate(trip.createdAt) }}
+				</el-descriptions-item>
+			</el-descriptions>
+		</div>
+
 		<!-- 导出弹窗 -->
 		<ExportModal
 			:open="showExportModal"
@@ -352,28 +579,33 @@
 <script setup lang="ts">
 	import { ref, computed, onMounted } from "vue";
 	import { useRoute, useRouter } from "vue-router";
-	import { Plus, Edit, Delete, Money, Document, Download } from "@element-plus/icons-vue";
-	import { ElMessage } from "element-plus";
-	import { getTripById } from "../api/trips";
+	import { Plus, Edit, Delete, ArrowLeft, Download } from "@element-plus/icons-vue";
+	import { ElMessage, ElMessageBox } from "element-plus";
+	import { getTripById, updateTrip } from "../api/trips";
 	import { getTripExpenses, getExpenseStats, deleteExpense } from "../api/expenses";
 	import { getTripNotes, deleteNote } from "../api/notes";
 	import { useCurrencyStore } from "../stores/currencyStore";
 	import SkateboardNav from "../components/SkateboardNav.vue";
 	import SkateboardTabBar from "../components/SkateboardTabBar.vue";
 	import ExportModal from "../components/ExportModal.vue";
+	import CurrencySwitcher from "../components/CurrencySwitcher.vue";
 	import VChart from "vue-echarts";
 	import { use } from "echarts/core";
-	import { PieChart } from "echarts/charts";
-	import { TooltipComponent, LegendComponent } from "echarts/components";
+	import { PieChart, BarChart } from "echarts/charts";
+	import { TooltipComponent, LegendComponent, GridComponent } from "echarts/components";
 	import { CanvasRenderer } from "echarts/renderers";
 	import type { Trip, Expense, ExpenseStats, Note } from "../types";
 	import dayjs from "dayjs";
+	import { usePageEnter } from "../composables/useGsapAnimations";
 
-	use([PieChart, TooltipComponent, LegendComponent, CanvasRenderer]);
+	use([PieChart, BarChart, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer]);
 
 	const route = useRoute();
 	const router = useRouter();
 	const currencyStore = useCurrencyStore();
+
+	// GSAP 页面入场动画
+	const pageRef = usePageEnter(0);
 
 	const tripId = route.params.id as string;
 	const loading = ref(true);
@@ -382,13 +614,15 @@
 	const notes = ref<Note[]>([]);
 	const statsData = ref<ExpenseStats | null>(null);
 	const showExportModal = ref(false);
+	const isPublic = ref(false);
 
-	const activeTab = ref((route.query.tab as string) || "overview");
+	const activeTab = ref((route.query.tab as string) || "expenses");
 
 	const tabItems = [
-		{ key: "overview", label: "概览" },
 		{ key: "expenses", label: "账单" },
 		{ key: "notes", label: "游记" },
+		{ key: "stats", label: "统计" },
+		{ key: "overview", label: "概览" },
 	];
 
 	const expensePage = ref(1);
@@ -400,31 +634,158 @@
 	const tripTitle = computed(() => trip.value?.title || "");
 	const expenseTotalAmount = computed(() => expenses.value.reduce((sum, e) => sum + Number(e.amount), 0));
 
-	function getSummaries() {
-		return ["合计", "", currencyStore.getCurrencySymbol() + currencyStore.convertAmount(expenseTotalAmount.value).toFixed(2), "", ""];
-	}
+	// 计算统计数据摘要
+	const statsSummary = computed(() => {
+		const total = expenses.value.reduce((sum, e) => sum + Number(e.amount), 0);
+		if (expenses.value.length === 0) {
+			return { total: 0, avgPerDay: 0, maxCategory: null, count: 0, noteCount: 0, totalImages: 0 };
+		}
 
-	const COLORS = ["#667eea", "#764ba2", "#f093fb", "#f5576c", "#4facfe", "#00f2fe", "#43e97b", "#fa709a"];
+		const categoryTotals: Record<string, number> = {};
+		const dates = new Set<string>();
+		for (const e of expenses.value) {
+			categoryTotals[e.category] = (categoryTotals[e.category] || 0) + Number(e.amount);
+			dates.add(dayjs(e.expenseDate).format("YYYY-MM-DD"));
+		}
+
+		let maxCategory = "";
+		let maxAmount = 0;
+		for (const [cat, amt] of Object.entries(categoryTotals)) {
+			if (amt > maxAmount) {
+				maxAmount = amt;
+				maxCategory = cat;
+			}
+		}
+
+		let totalImages = 0;
+		for (const n of notes.value) {
+			totalImages += n.images?.length || 0;
+		}
+
+		const currencySymbol = currencyStore.getCurrencySymbol();
+		const convertedMaxAmount = currencyStore.convertAmount(maxAmount);
+
+		return {
+			total: Math.round(total * 100) / 100,
+			avgPerDay: dates.size > 0 ? Math.round((total / dates.size) * 100) / 100 : 0,
+			maxCategory: maxCategory ? `${maxCategory} (${currencySymbol}${convertedMaxAmount.toFixed(currencyStore.currency === "JPY" ? 0 : 2)})` : null,
+			count: expenses.value.length,
+			noteCount: notes.value.length,
+			totalImages,
+		};
+	});
+
+	// 每日消费数据
+	const dailyExpenseData = computed(() => {
+		const map: Record<string, number> = {};
+		for (const e of expenses.value) {
+			const date = dayjs(e.expenseDate).format("YYYY-MM-DD");
+			map[date] = (map[date] || 0) + Number(e.amount);
+		}
+		return Object.entries(map)
+			.map(([date, amount]) => ({ date, amount: Math.round(amount * 100) / 100 }))
+			.sort((a, b) => a.date.localeCompare(b.date));
+	});
+
+	// 饼图配置
+	const COLORS = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD"];
 
 	const pieChartOption = computed(() => {
-		if (!statsData.value) return {};
+		if (!statsData.value || statsData.value.categories.length === 0) return {};
+		const currencySymbol = currencyStore.getCurrencySymbol();
+		const formatAmount = (amount: number) => {
+			const converted = currencyStore.convertAmount(amount);
+			return `${currencySymbol}${converted.toFixed(currencyStore.currency === "JPY" ? 0 : 2)}`;
+		};
 		return {
-			tooltip: { trigger: "item" },
-			legend: { bottom: 0 },
+			tooltip: {
+				trigger: "item",
+				formatter: (params: any) => `${params.name}: ${formatAmount(params.value)}`,
+			},
+			legend: {
+				bottom: 0,
+				formatter: (name: string) => {
+					const item = statsData.value?.categories.find((c) => c.category === name);
+					return item ? `${name} ${formatAmount(item.total)}` : name;
+				},
+			},
 			series: [
 				{
 					name: "消费分类",
 					type: "pie",
-					radius: ["40%", "70%"],
+					radius: [0, "70%"],
 					data: statsData.value.categories.map((c: { category: string; total: number }) => ({
 						name: c.category,
 						value: c.total,
 					})),
 					color: COLORS,
+					label: {
+						show: true,
+						formatter: (params: any) => `${params.name} ${formatAmount(params.value)}`,
+					},
+					labelLine: { show: false },
 				},
 			],
 		};
 	});
+
+	// 柱状图配置
+	const barChartOption = computed(() => {
+		if (dailyExpenseData.value.length === 0) return {};
+		const currencySymbol = currencyStore.getCurrencySymbol();
+		const formatAmount = (amount: number) => {
+			const converted = currencyStore.convertAmount(amount);
+			return `${currencySymbol}${converted.toFixed(currencyStore.currency === "JPY" ? 0 : 2)}`;
+		};
+		return {
+			tooltip: {
+				trigger: "axis",
+				formatter: (params: any) => {
+					const data = params[0];
+					return `${data.name}<br/>金额: ${formatAmount(data.value)}`;
+				},
+			},
+			grid: { top: 20, right: 20, bottom: 40, left: 60 },
+			xAxis: {
+				type: "category",
+				data: dailyExpenseData.value.map((d) => d.date),
+			},
+			yAxis: {
+				type: "value",
+				axisLabel: {
+					formatter: (value: number) => formatAmount(value),
+				},
+			},
+			series: [
+				{
+					name: "金额",
+					type: "bar",
+					data: dailyExpenseData.value.map((d) => d.amount),
+					itemStyle: { color: "#1890ff" },
+					barMaxWidth: 40,
+				},
+			],
+		};
+	});
+
+	function getSummaries(param: { columns: { property: string }[]; data: Expense[] }) {
+		const { columns } = param;
+		const sums: string[] = [];
+		const currencySymbol = currencyStore.getCurrencySymbol();
+		const total = currencyStore.convertAmount(expenseTotalAmount.value).toFixed(currencyStore.currency === "JPY" ? 0 : 2);
+
+		columns.forEach((_column, index) => {
+			if (index === 0) {
+				sums[index] = "合计";
+			} else if (index === 2) {
+				sums[index] = `${currencySymbol}${total}`;
+			} else {
+				sums[index] = "";
+			}
+		});
+
+		return sums;
+	}
 
 	function formatDate(dateStr: string) {
 		return dayjs(dateStr).format("YYYY-MM-DD");
@@ -436,6 +797,36 @@
 
 	function setActiveTab(key: string) {
 		activeTab.value = key;
+		router.replace({ query: { ...route.query, tab: key } });
+	}
+
+	async function handleEndTrip() {
+		if (!trip.value) return;
+		try {
+			await ElMessageBox.confirm("确定要结束这次旅程吗？结束后将无法再添加账单和游记。", "提示", {
+				confirmButtonText: "确定",
+				cancelButtonText: "取消",
+				type: "warning",
+			});
+			await updateTrip(trip.value.id, { isEnded: 1 });
+			ElMessage.success("旅程已标记为结束");
+			loadData();
+		} catch {
+			// 用户取消操作
+		}
+	}
+
+	async function handleTogglePublic(val: string | number | boolean) {
+		if (!trip.value) return;
+		const checked = val === true;
+		try {
+			await updateTrip(trip.value.id, { isPublic: checked ? 1 : 0 });
+			ElMessage.success(checked ? "已设为公开" : "已设为私密");
+			loadData();
+		} catch {
+			ElMessage.error("操作失败");
+			isPublic.value = !checked; // 恢复状态
+		}
 	}
 
 	async function loadData() {
@@ -452,6 +843,7 @@
 			expenseTotal.value = expenseData.total;
 			notes.value = notesData;
 			statsData.value = stats;
+			isPublic.value = tripData.isPublic === 1;
 		} catch {
 			ElMessage.error("加载旅程详情失败");
 		} finally {
@@ -495,3 +887,231 @@
 		loadData();
 	});
 </script>
+
+<style scoped lang="scss">
+	.trip-detail-page {
+		max-width: 1200px;
+		margin: 0 auto;
+	}
+
+	/* 面包屑导航 */
+	.trip-detail-breadcrumb {
+		margin-bottom: 16px;
+	}
+
+	/* 顶部信息卡片 */
+	.trip-detail-header-card {
+		margin-bottom: 16px;
+	}
+
+	.trip-detail-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 12px;
+	}
+
+	.trip-detail-header-left {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.trip-detail-title {
+		margin: 0;
+		font-size: 18px;
+		font-weight: 600;
+		display: flex;
+		align-items: center;
+	}
+
+	.trip-detail-header-right {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	/* Tab 头部操作区 */
+	.trip-detail-tab-header {
+		display: flex;
+		justify-content: flex-end;
+		align-items: center;
+		margin-bottom: 16px;
+	}
+
+	/* 标签栏和导出按钮行 */
+	.trip-detail-tab-bar-row {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+	}
+
+	.export-notes-btn {
+		flex-shrink: 0;
+		margin-bottom: 16px;
+	}
+
+	/* 概览 Descriptions 样式 */
+	.overview-descriptions {
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	.overview-descriptions :deep(.el-descriptions__label) {
+		width: 120px;
+		font-weight: 500;
+	}
+
+	/* 金额样式 */
+	.expense-amount {
+		color: #ff4d4f;
+		font-weight: 600;
+	}
+
+	/* 合计行上边框直角 */
+	:deep(.el-table__footer-wrapper .el-table__footer .el-table__cell) {
+		border-top: 1px solid #ebeef5;
+		border-radius: 0;
+	}
+
+	/* 暗色主题合计行上边框 */
+	.dark-theme :deep(.el-table__footer-wrapper .el-table__footer .el-table__cell) {
+		border-top-color: #4c4d4f;
+	}
+
+	/* 统计卡片 */
+	.stat-card {
+		text-align: center;
+		padding: 8px 0;
+	}
+
+	.stat-card-title {
+		font-size: 14px;
+		color: #666;
+		margin-bottom: 8px;
+	}
+
+	.stat-card-value {
+		font-size: 24px;
+		font-weight: 600;
+	}
+
+	.stat-card-value-red {
+		color: #cf1322;
+	}
+
+	.stat-card-value-blue {
+		color: #1890ff;
+	}
+
+	.stat-card-value-purple {
+		color: #722ed1;
+	}
+
+	.stat-card-value-orange {
+		color: #fa8c16;
+		font-size: 16px;
+	}
+
+	.stat-card-value-green {
+		color: #52c41a;
+	}
+
+	.stat-card-value-cyan {
+		color: #13c2c2;
+	}
+
+	.stat-card-value-pink {
+		color: #eb2f96;
+	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .trip-detail-header-card {
+		background-color: #1f1f1f !important;
+		border-color: #303030 !important;
+	}
+
+	.dark-theme .trip-detail-title {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .stat-card-title {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .expense-amount {
+		color: #ff7875 !important;
+	}
+
+	.dark-theme .trip-detail-breadcrumb :deep(.el-breadcrumb__inner) {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .trip-detail-breadcrumb :deep(.el-breadcrumb__inner a) {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .trip-detail-breadcrumb :deep(.el-breadcrumb__separator) {
+		color: #595959 !important;
+	}
+
+	/* 暗黑主题概览描述 */
+	.dark-theme :deep(.overview-descriptions .el-descriptions__label) {
+		background-color: #2a2a2a !important;
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme :deep(.overview-descriptions .el-descriptions__content) {
+		background-color: #1f1f1f !important;
+		color: #e8e8e8 !important;
+	}
+
+	/* 暗黑主题导出按钮 */
+	.dark-theme .export-notes-btn {
+		background-color: #2a2a2a !important;
+		border-color: #3a3a3a !important;
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .export-notes-btn:hover {
+		background-color: #3a3a3a !important;
+		border-color: #505050 !important;
+		color: #fff !important;
+	}
+
+	/* 暗黑主题 Tab 标签栏 */
+	.dark-theme .trip-detail-tab-bar-row {
+		border-color: #303030 !important;
+	}
+
+	/* 暗黑主题开关文字 */
+	.dark-theme :deep(.el-switch__label) {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme :deep(.el-switch__label.is-active) {
+		color: #667eea !important;
+	}
+
+	/* 暗黑主题结束旅程按钮 */
+	.dark-theme :deep(.trip-detail-header-right .el-button--default) {
+		background-color: #2a2a2a !important;
+		border-color: #3a3a3a !important;
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme :deep(.trip-detail-header-right .el-button--default:hover) {
+		background-color: #3a3a3a !important;
+		border-color: #505050 !important;
+		color: #fff !important;
+	}
+
+	/* 空状态容器 - 增加纵向空间 */
+	.expenses-empty-container {
+		min-height: 400px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+</style>

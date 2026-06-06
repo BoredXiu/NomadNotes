@@ -1,7 +1,10 @@
 <template>
-	<div style="max-width: 500px; margin: 0 auto">
-		<el-card v-loading="loading">
-			<el-space style="margin-bottom: 24px; display: flex; justify-content: space-between; width: 100%">
+	<div class="expense-form-page">
+		<el-card
+			class="expense-form-card"
+			v-loading="loading"
+		>
+			<el-space class="expense-form-header">
 				<el-space>
 					<el-button
 						text
@@ -297,3 +300,39 @@
 		}
 	});
 </script>
+
+<style scoped lang="scss">
+	.expense-form-page {
+		max-width: 500px;
+		margin: 0 auto;
+	}
+
+	.expense-form-header {
+		margin-bottom: 24px;
+		display: flex;
+		justify-content: space-between;
+		width: 100%;
+	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .expense-form-page h4 {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .expense-form-page .el-button--text {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .expense-form-page .el-button--text:hover {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .expense-form-page :deep(.el-select .el-input__wrapper) {
+		background-color: #2a2a2a !important;
+	}
+
+	.dark-theme .expense-form-page :deep(.el-textarea__inner) {
+		background-color: #2a2a2a !important;
+		color: #e8e8e8 !important;
+	}
+</style>

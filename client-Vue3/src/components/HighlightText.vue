@@ -57,3 +57,11 @@ const parts = computed<HighlightPart[]>(() => {
   return result;
 });
 </script>
+
+<style scoped lang="scss">
+	/* 暗黑主题支持 */
+	.dark-theme mark {
+		background: #4a3a00 !important;
+		color: #ffd666 !important;
+	}
+</style>

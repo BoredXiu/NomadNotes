@@ -1,7 +1,10 @@
 <template>
-	<div style="max-width: 700px; margin: 0 auto">
-		<el-card v-loading="loading">
-			<el-space style="margin-bottom: 24px">
+	<div class="note-form-page">
+		<el-card
+			class="note-form-card"
+			v-loading="loading"
+		>
+			<el-space class="note-form-header">
 				<el-button
 					text
 					:icon="ArrowLeft"
@@ -237,3 +240,32 @@
 		}
 	});
 </script>
+
+<style scoped lang="scss">
+	.note-form-page {
+		max-width: 700px;
+		margin: 0 auto;
+	}
+
+	.note-form-header {
+		margin-bottom: 24px;
+	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .note-form-page h4 {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .note-form-page .el-button--text {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .note-form-page .el-button--text:hover {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .note-form-page :deep(.el-textarea__inner) {
+		background-color: #2a2a2a !important;
+		color: #e8e8e8 !important;
+	}
+</style>

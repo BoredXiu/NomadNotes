@@ -1,6 +1,20 @@
 <template>
-	<div style="min-height: 100vh; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
-		<el-card style="width: 400px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15)">
+	<div
+		:style="{
+			minHeight: '100vh',
+			display: 'flex',
+			justifyContent: 'center',
+			alignItems: 'center',
+			backgroundImage: `url(${bgLogin})`,
+			backgroundPosition: 'center',
+			backgroundSize: 'cover',
+			backgroundRepeat: 'no-repeat',
+		}"
+	>
+		<el-card
+			ref="formRef_gsap"
+			style="width: 400px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15)"
+		>
 			<el-space
 				direction="vertical"
 				:size="24"
@@ -8,8 +22,18 @@
 				alignment="center"
 			>
 				<div style="text-align: center">
-					<h2 style="margin: 0 0 4px 0; font-size: 30px; font-weight: 600; line-height: 1.35">NomadNotes</h2>
-					<div style="color: rgba(0, 0, 0, 0.45); font-size: 14px; margin-bottom: 8px">游迹 - 创建你的账号</div>
+					<h2
+						class="login-page-title"
+						style="margin: 0 0 4px 0; font-size: 30px; font-weight: 600; line-height: 1.35"
+					>
+						NomadNotes
+					</h2>
+					<div
+						class="login-page-subtitle"
+						style="color: rgba(0, 0, 0, 0.45); font-size: 14px; margin-bottom: 8px"
+					>
+						游迹 - 创建你的账号
+					</div>
 				</div>
 
 				<el-form
@@ -71,9 +95,8 @@
 							type="primary"
 							:loading="loading"
 							native-type="submit"
-							block
 							size="large"
-							style="font-size: 16px; height: 40px"
+							style="font-size: 16px; height: 40px; width: 100%"
 						>
 							注册
 						</el-button>
@@ -101,12 +124,17 @@
 	import type { FormInstance, FormRules } from "element-plus";
 	import * as authApi from "../api/auth";
 	import { useAuthStore } from "../stores/authStore";
+	import bgLogin from "../assets/bg-login.jpg";
+	import { useFadeIn } from "../composables/useGsapAnimations";
 
 	const router = useRouter();
 	const authStore = useAuthStore();
 	const formRef = ref<FormInstance>();
 	const loading = ref(false);
 	const captchaSvg = ref("");
+
+	// GSAP 动画
+	const formRef_gsap = useFadeIn(0.2);
 	const captchaId = ref("");
 
 	const formData = reactive({
@@ -172,3 +200,14 @@
 		fetchCaptcha();
 	});
 </script>
+
+<style scoped lang="scss">
+	/* 暗黑主题支持 */
+	.dark-theme .login-page-title {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .login-page-subtitle {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+</style>

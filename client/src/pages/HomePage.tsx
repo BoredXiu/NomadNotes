@@ -24,6 +24,7 @@ import * as tripsApi from '../api/trips';
 import { CardListSkeleton } from '../components/Skeletons';
 import type { Trip } from '../types';
 import dayjs from 'dayjs';
+import { usePageEnter, useStaggerList } from '../hooks/useGsapAnimations';
 
 const { Title, Text } = Typography;
 
@@ -31,6 +32,10 @@ export default function HomePage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // GSAP 动画
+  const pageRef = usePageEnter(0);
+  const { containerRef: listRef } = useStaggerList(0.06, 0.2);
 
   const fetchTrips = async () => {
     setLoading(true);
@@ -72,7 +77,7 @@ export default function HomePage() {
   }
 
   return (
-    <div>
+    <div ref={pageRef}>
       <Title level={3} style={{ marginBottom: 24 }}>
         我的旅程
       </Title>
@@ -80,7 +85,7 @@ export default function HomePage() {
       {trips.length === 0 ? (
         <Empty description="还没有旅程，点击上方按钮开始记录吧" />
       ) : (
-        <Row gutter={[16, 16]}>
+        <Row gutter={[16, 16]} ref={listRef}>
           {trips.map((trip) => (
             <Col key={trip.id} xs={24} sm={12} md={8} lg={6}>
               <Card

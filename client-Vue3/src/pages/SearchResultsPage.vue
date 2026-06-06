@@ -1,23 +1,26 @@
 <template>
-	<div style="max-width: 800px; margin: 0 auto; padding: 0 16px">
+	<div
+		class="search-results-page"
+		ref="pageRef"
+	>
 		<!-- 搜索标题 -->
-		<div style="margin-bottom: 24px">
-			<span style="font-size: 20px; font-weight: 600; display: block; margin-bottom: 4px"> 搜索结果: "{{ query }}" </span>
-			<span style="color: rgba(0, 0, 0, 0.45); font-size: 14px"> 共找到 {{ total }} 条结果 </span>
+		<div class="search-results-header">
+			<span class="search-results-title"> 搜索结果: "{{ query }}" </span>
+			<span class="search-results-count"> 共找到 {{ total }} 条结果 </span>
 		</div>
 
 		<!-- 筛选和排序 -->
 		<el-card
 			size="small"
 			shadow="hover"
-			style="margin-bottom: 16px"
+			class="search-results-filters"
 		>
 			<el-space wrap>
-				<span style="color: rgba(0, 0, 0, 0.45); font-size: 14px">范围:</span>
+				<span class="search-results-filter-label">范围:</span>
 				<el-select
 					v-model="scope"
 					size="small"
-					style="width: 100px"
+					class="search-results-filter-select"
 					@change="handleScopeChange"
 				>
 					<el-option
@@ -27,11 +30,11 @@
 						:label="opt.label"
 					/>
 				</el-select>
-				<span style="color: rgba(0, 0, 0, 0.45); font-size: 14px">排序:</span>
+				<span class="search-results-filter-label">排序:</span>
 				<el-select
 					v-model="sortBy"
 					size="small"
-					style="width: 120px"
+					class="search-results-filter-select-sort"
 					@change="handleSortChange"
 				>
 					<el-option
@@ -54,24 +57,24 @@
 		<el-empty
 			v-if="!loading && results.length === 0 && query"
 			description="未找到匹配结果"
-			style="margin-top: 60px"
+			class="search-results-empty"
 		/>
 
 		<el-empty
 			v-if="!loading && !query"
 			description="请输入搜索关键词"
-			style="margin-top: 60px"
+			class="search-results-empty"
 		/>
 
 		<div v-if="results.length > 0">
 			<div
 				v-for="item in results"
 				:key="item.id"
-				style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; align-items: flex-start; gap: 12px"
+				class="search-result-item"
 				@click="handleItemClick(item)"
 			>
 				<!-- 类型图标 -->
-				<span style="margin-top: 2px; flex-shrink: 0">
+				<span class="search-result-icon">
 					<el-icon
 						v-if="item.type === 'trip'"
 						:size="16"
@@ -96,25 +99,25 @@
 				</span>
 
 				<!-- 内容区 -->
-				<div style="flex: 1; min-width: 0">
+				<div class="search-result-content">
 					<!-- 旅程结果 -->
 					<template v-if="item.type === 'trip'">
-						<div style="margin-bottom: 4px">
+						<div class="search-result-row">
 							<el-tag
 								type="primary"
 								size="small"
-								style="font-size: 11px; margin-right: 6px"
+								class="search-result-tag"
 							>
 								旅程
 							</el-tag>
-							<span style="font-weight: 500">
+							<span class="search-result-title">
 								<HighlightText
 									:text="item.title || ''"
 									:keyword="query"
 								/>
 							</span>
 						</div>
-						<div style="color: rgba(0, 0, 0, 0.45); font-size: 13px">
+						<div class="search-result-secondary">
 							<el-icon :size="12"><Location /></el-icon>
 							<HighlightText
 								:text="item.destination || ''"
@@ -123,7 +126,7 @@
 						</div>
 						<div
 							v-if="item.username"
-							style="color: rgba(0, 0, 0, 0.45); font-size: 12px"
+							class="search-result-tertiary"
 						>
 							作者: {{ item.username }}
 						</div>
@@ -131,28 +134,17 @@
 
 					<!-- 游记结果 -->
 					<template v-else-if="item.type === 'note'">
-						<div style="margin-bottom: 4px">
+						<div class="search-result-row">
 							<el-tag
 								color="#f9f0ff"
 								size="small"
-								style="font-size: 11px; margin-right: 6px; color: #722ed1; border-color: #d3adf7"
+								class="search-result-tag-note"
 							>
 								游记
 							</el-tag>
-							<span style="font-weight: 600">{{ item.tripTitle }}</span>
+							<span class="search-result-title">{{ item.tripTitle }}</span>
 						</div>
-						<div
-							style="
-								color: #666;
-								font-size: 14px;
-								overflow: hidden;
-								text-overflow: ellipsis;
-								display: -webkit-box;
-								-webkit-line-clamp: 2;
-								-webkit-box-orient: vertical;
-								margin-bottom: 2px;
-							"
-						>
+						<div class="search-result-content-text">
 							<HighlightText
 								:text="item.content || ''"
 								:keyword="query"
@@ -160,7 +152,7 @@
 						</div>
 						<div
 							v-if="item.noteDate"
-							style="color: rgba(0, 0, 0, 0.45); font-size: 12px"
+							class="search-result-tertiary"
 						>
 							<el-icon :size="12"><Clock /></el-icon>
 							{{ formatDate(item.noteDate) }}
@@ -169,27 +161,27 @@
 
 					<!-- 账单结果 -->
 					<template v-else-if="item.type === 'expense'">
-						<div style="margin-bottom: 4px">
+						<div class="search-result-row">
 							<el-tag
 								type="success"
 								size="small"
-								style="font-size: 11px; margin-right: 6px"
+								class="search-result-tag"
 							>
 								账单
 							</el-tag>
-							<span style="font-weight: 600">{{ item.tripTitle }}</span>
+							<span class="search-result-title">{{ item.tripTitle }}</span>
 						</div>
-						<div style="margin-bottom: 2px">
+						<div class="search-result-row">
 							<el-tag
 								size="small"
 								type="danger"
 								>{{ item.category }}</el-tag
 							>
-							<span style="color: #ff4d4f; font-weight: 600; margin-left: 6px"> ¥{{ item.amount }} </span>
+							<span class="search-result-amount"> ¥{{ item.amount }} </span>
 						</div>
 						<div
 							v-if="item.note"
-							style="color: rgba(0, 0, 0, 0.45); font-size: 12px"
+							class="search-result-tertiary"
 						>
 							<HighlightText
 								:text="item.note"
@@ -203,7 +195,7 @@
 			<!-- 分页 -->
 			<div
 				v-if="total > PAGE_SIZE"
-				style="text-align: center; margin-top: 24px"
+				class="search-results-pagination"
 			>
 				<el-pagination
 					v-model:current-page="page"
@@ -226,9 +218,14 @@
 	import HighlightText from "../components/HighlightText.vue";
 	import type { SearchResultItem } from "../types";
 	import dayjs from "dayjs";
+	import { useFadeIn, useStaggerList } from "../composables/useGsapAnimations";
 
 	const route = useRoute();
 	const router = useRouter();
+
+	// GSAP 动画
+	const pageRef = useFadeIn(0);
+	const { containerRef: listRef, animate: animateList } = useStaggerList(0.05, 0.2);
 
 	const query = ref((route.query.q as string) || "");
 	const scope = ref<string>("all");
@@ -309,3 +306,162 @@
 		doSearch();
 	});
 </script>
+
+<style scoped lang="scss">
+	.search-results-page {
+		max-width: 800px;
+		margin: 0 auto;
+		padding: 0 16px;
+	}
+
+	.search-results-header {
+		margin-bottom: 24px;
+	}
+
+	.search-results-title {
+		font-size: 20px;
+		font-weight: 600;
+		display: block;
+		margin-bottom: 4px;
+	}
+
+	.search-results-count {
+		color: rgba(0, 0, 0, 0.45);
+		font-size: 14px;
+	}
+
+	.search-results-filters {
+		margin-bottom: 16px;
+	}
+
+	.search-results-filter-label {
+		color: rgba(0, 0, 0, 0.45);
+		font-size: 14px;
+	}
+
+	.search-results-filter-select {
+		width: 100px;
+	}
+
+	.search-results-filter-select-sort {
+		width: 120px;
+	}
+
+	.search-results-empty {
+		margin-top: 60px;
+	}
+
+	.search-result-item {
+		padding: 12px 0;
+		border-bottom: 1px solid #f0f0f0;
+		cursor: pointer;
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+	}
+
+	.search-result-item:hover {
+		background-color: #fafafa;
+	}
+
+	.search-result-icon {
+		margin-top: 2px;
+		flex-shrink: 0;
+	}
+
+	.search-result-content {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.search-result-row {
+		margin-bottom: 4px;
+	}
+
+	.search-result-tag {
+		font-size: 11px;
+		margin-right: 6px;
+	}
+
+	.search-result-tag-note {
+		font-size: 11px;
+		margin-right: 6px;
+		color: #722ed1;
+		border-color: #d3adf7;
+	}
+
+	.search-result-title {
+		font-weight: 500;
+	}
+
+	.search-result-secondary {
+		color: rgba(0, 0, 0, 0.45);
+		font-size: 13px;
+	}
+
+	.search-result-tertiary {
+		color: rgba(0, 0, 0, 0.45);
+		font-size: 12px;
+	}
+
+	.search-result-content-text {
+		color: #666;
+		font-size: 14px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		line-clamp: 2;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		margin-bottom: 2px;
+	}
+
+	.search-result-amount {
+		color: #ff4d4f;
+		font-weight: 600;
+		margin-left: 6px;
+	}
+
+	.search-results-pagination {
+		text-align: center;
+		margin-top: 24px;
+	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .search-results-title {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .search-results-count {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+
+	.dark-theme .search-results-filter-label {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+
+	.dark-theme .search-result-item {
+		border-bottom-color: #303030 !important;
+	}
+
+	.dark-theme .search-result-item:hover {
+		background-color: #1a1a1a !important;
+	}
+
+	.dark-theme .search-result-secondary {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+
+	.dark-theme .search-result-tertiary {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+
+	.dark-theme .search-result-content-text {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .search-result-tag-note {
+		background-color: #2a2a2a !important;
+		border-color: #5a3e7a !important;
+	}
+</style>

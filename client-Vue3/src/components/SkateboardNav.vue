@@ -44,3 +44,10 @@ function handleBack() {
   }
 }
 </script>
+
+<style scoped lang="scss">
+	/* 暗黑主题支持 */
+	.dark-theme .skateboard-nav-title {
+		color: #e8e8e8 !important;
+	}
+</style>

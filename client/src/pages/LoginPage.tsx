@@ -1,3 +1,5 @@
+import bgLogin from '../assets/bg-login.jpg';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Input, Button, Card, Typography, message, Space } from 'antd';
 import { MailOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
@@ -56,7 +58,7 @@ export default function LoginPage() {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: `url(${bgLogin}) center/cover no-repeat`,
       }}
     >
       <Card style={{ width: 400, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>

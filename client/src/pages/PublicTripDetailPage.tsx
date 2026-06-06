@@ -17,6 +17,7 @@ import {
   Table,
   Space,
   Image,
+  Button,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -27,6 +28,7 @@ import {
   CalendarOutlined,
   FileTextOutlined,
   ClockCircleOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -34,6 +36,7 @@ import { getPublicTripById } from '../api/trips';
 import { useAuthStore } from '../store/authStore';
 import { TripDetailSkeleton } from '../components/Skeletons';
 import SkateboardTabBar from '../components/SkateboardTabBar';
+import ExportModal from '../components/ExportModal';
 import type { Trip, Expense, Note } from '../types';
 import dayjs from 'dayjs';
 import {
@@ -69,6 +72,7 @@ export default function PublicTripDetailPage() {
   const navigate = useNavigate();
   const currentUserId = useAuthStore((s) => s.user?.id);
   const [activeTab, setActiveTab] = useState('overview');
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   const { data: trip, isLoading, isError } = useQuery({
     queryKey: ['publicTrip', id],
@@ -547,17 +551,40 @@ export default function PublicTripDetailPage() {
         </Space>
       </div>
 
-      <SkateboardTabBar
-        activeKey={activeTab}
-        onChange={(key: string) => setActiveTab(key)}
-        items={tabItems}
-      />
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+        <SkateboardTabBar
+          activeKey={activeTab}
+          onChange={(key: string) => setActiveTab(key)}
+          items={tabItems}
+        />
+        {(notes.length > 0 || expenses.length > 0) && (
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={() => setExportModalOpen(true)}
+            style={{ flexShrink: 0, marginBottom: 16 }}
+          >
+            导出游记
+          </Button>
+        )}
+      </div>
       <Tabs
         activeKey={activeTab}
         onChange={(key: string) => setActiveTab(key)}
         tabBarStyle={{ display: 'none' }}
         items={tabItems}
       />
+
+      {/* 游记导出弹窗 */}
+      {tripData && (
+        <ExportModal
+          open={exportModalOpen}
+          onClose={() => setExportModalOpen(false)}
+          tripId={tripData.id}
+          tripTitle={tripData.title}
+          notes={notes}
+          hasExpenses={expenses.length > 0}
+        />
+      )}
     </div>
   );
 }

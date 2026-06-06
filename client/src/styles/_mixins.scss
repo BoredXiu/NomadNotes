@@ -1,0 +1,88 @@
+// =============================================
+// NomadNotes SCSS Mixins (React)
+// =============================================
+
+@use "variables" as *;
+
+// ---- 布局 ----
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@mixin page-container {
+  max-width: $max-width;
+  margin: 0 auto;
+  padding: $spacing-xl;
+}
+
+// ---- 文本 ----
+@mixin text-ellipsis($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// ---- 卡片 ----
+@mixin card {
+  background: $bg-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+  padding: $spacing-xl;
+}
+
+// ---- 响应式 ----
+@mixin mobile {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: 1024px) {
+    @content;
+  }
+}
+
+// ---- 动画 ----
+@mixin fade-in($duration: 0.3s) {
+  animation: fadeIn $duration ease both;
+}
+
+@mixin slide-up($duration: 0.3s) {
+  animation: slideUp $duration ease both;
+}
+
+@mixin scale-in($duration: 0.3s) {
+  animation: scaleIn $duration ease both;
+}
+
+// ---- 滚动条 ----
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $text-disabled;
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}

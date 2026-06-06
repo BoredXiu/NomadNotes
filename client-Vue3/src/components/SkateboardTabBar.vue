@@ -202,3 +202,18 @@
 		{ deep: true },
 	);
 </script>
+
+<style scoped lang="scss">
+	/* 暗黑主题支持 */
+	.dark-theme .skateboard-tab-bar {
+		border-bottom-color: #303030 !important;
+	}
+
+	.dark-theme .skateboard-tab-item {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .skateboard-tab-item-active {
+		color: #40a9ff !important;
+	}
+</style>

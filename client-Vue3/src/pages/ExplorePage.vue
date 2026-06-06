@@ -1,7 +1,7 @@
 <template>
-	<div>
-		<h3 style="margin-bottom: 24px; font-size: 20px; font-weight: 600">微游记</h3>
-		<span style="display: block; margin-bottom: 24px; color: rgba(0, 0, 0, 0.45); font-size: 14px"> 发现其他旅行者的精彩分享 </span>
+	<div ref="pageRef">
+		<h3 class="explore-title">微游记</h3>
+		<span class="explore-subtitle"> 发现其他旅行者的精彩分享 </span>
 
 		<CardListSkeleton
 			v-if="loading"
@@ -10,12 +10,14 @@
 
 		<div
 			v-else-if="trips.length > 0"
-			style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px"
+			ref="listRef"
+			class="explore-grid"
 		>
 			<el-card
 				v-for="trip in trips"
 				:key="trip.id"
 				:body-style="{ padding: 0 }"
+				class="explore-card"
 				style="cursor: pointer"
 				shadow="hover"
 				@click="navigateToTrip(trip)"
@@ -23,21 +25,21 @@
 				<el-image
 					v-if="trip.coverImage"
 					:src="trip.coverImage"
-					style="width: 100%; height: 160px; object-fit: cover"
+					class="explore-card-image"
 					fit="cover"
 				/>
 				<div
 					v-else
-					style="width: 100%; height: 160px; background: #f0f2f5; display: flex; align-items: center; justify-content: center"
+					class="explore-card-cover"
 				>
 					<MyTripIcon
 						:size="48"
 						color="#bfbfbf"
 					/>
 				</div>
-				<div style="padding: 12px 16px">
-					<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px">
-						<h4 style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; word-break: break-word; margin: 0">
+				<div class="explore-card-content">
+					<div class="explore-card-header">
+						<h4 class="explore-card-title">
 							{{ trip.title }}
 						</h4>
 						<el-tag
@@ -47,20 +49,20 @@
 							>我的</el-tag
 						>
 					</div>
-					<div style="display: flex; flex-direction: column; gap: 4px; color: rgba(0, 0, 0, 0.45); font-size: 13px">
-						<div>
-							<el-icon style="margin-right: 4px"><Location /></el-icon>
+					<div class="explore-card-info">
+						<div class="explore-card-info-item">
+							<el-icon class="explore-card-icon"><Location /></el-icon>
 							{{ trip.destination }}
 						</div>
-						<div>
-							<el-icon style="margin-right: 4px"><Timer /></el-icon>
+						<div class="explore-card-info-item">
+							<el-icon class="explore-card-icon"><Timer /></el-icon>
 							{{ formatDate(trip.startDate) }} - {{ formatDate(trip.endDate) }}
 						</div>
-						<div>
-							<el-icon style="margin-right: 4px"><User /></el-icon>
+						<div class="explore-card-info-item">
+							<el-icon class="explore-card-icon"><User /></el-icon>
 							{{ trip.User?.username || "匿名用户" }}
 						</div>
-						<div>
+						<div class="explore-card-status">
 							<el-tag
 								v-if="trip.isEnded"
 								type="primary"
@@ -90,7 +92,7 @@
 			:total="total"
 			:page-size="pageSize"
 			layout="prev, pager, next"
-			style="text-align: center; margin-top: 24px"
+			class="explore-pagination"
 		/>
 	</div>
 </template>
@@ -106,10 +108,15 @@
 	import { useAuthStore } from "../stores/authStore";
 	import type { Trip } from "../types";
 	import dayjs from "dayjs";
+	import { usePageEnter, useStaggerList } from "../composables/useGsapAnimations";
 
 	const router = useRouter();
 	const authStore = useAuthStore();
 	const trips = ref<Trip[]>([]);
+
+	// GSAP 动画
+	const pageRef = usePageEnter(0);
+	const { containerRef: listRef, animate: animateList } = useStaggerList(0.06, 0.2);
 	const loading = ref(true);
 	const total = ref(0);
 	const currentPage = ref(1);
@@ -145,4 +152,123 @@
 	onMounted(() => {
 		loadTrips();
 	});
+
+	// trips 数据变化后重新触发交错动画
+	watch(trips, () => {
+		animateList();
+	});
 </script>
+
+<style scoped lang="scss">
+	.explore-title {
+		margin-bottom: 24px;
+		font-size: 20px;
+		font-weight: 600;
+	}
+
+	.explore-subtitle {
+		display: block;
+		margin-bottom: 24px;
+		color: rgba(0, 0, 0, 0.45);
+		font-size: 14px;
+	}
+
+	.explore-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 16px;
+	}
+
+	.explore-card {
+		cursor: pointer;
+	}
+
+	.explore-card-image {
+		width: 100%;
+		height: 160px;
+		object-fit: cover;
+	}
+
+	.explore-card-cover {
+		width: 100%;
+		height: 160px;
+		background: #f0f2f5;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.explore-card-content {
+		padding: 12px 16px;
+	}
+
+	.explore-card-header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 8px;
+	}
+
+	.explore-card-title {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		word-break: break-word;
+		margin: 0;
+	}
+
+	.explore-card-info {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		color: rgba(0, 0, 0, 0.45);
+		font-size: 13px;
+	}
+
+	.explore-card-info-item {
+		display: flex;
+		align-items: center;
+	}
+
+	.explore-card-icon {
+		margin-right: 4px;
+	}
+
+	.explore-card-status {
+		margin-top: 4px;
+	}
+
+	.explore-pagination {
+		text-align: center;
+		margin-top: 24px;
+	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .explore-title {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .explore-subtitle {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+
+	.dark-theme .explore-card-cover {
+		background: #2a2a2a !important;
+	}
+
+	.dark-theme .explore-card-cover .el-icon {
+		color: #5a5a5a !important;
+	}
+
+	.dark-theme .explore-card-info {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+
+	.dark-theme .explore-card-icon {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+
+	.dark-theme .explore-card-title {
+		color: #e8e8e8 !important;
+	}
+</style>

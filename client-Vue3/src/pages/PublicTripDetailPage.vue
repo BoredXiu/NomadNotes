@@ -1,17 +1,20 @@
 <template>
-	<div>
+	<div
+		class="public-trip-detail-page"
+		ref="pageRef"
+	>
 		<!-- 面包屑导航 -->
-		<el-breadcrumb style="margin-bottom: 16px">
+		<el-breadcrumb class="public-trip-breadcrumb">
 			<el-breadcrumb-item :to="{ path: '/explore' }">微游记</el-breadcrumb-item>
 			<el-breadcrumb-item>{{ tripData?.title || "" }}</el-breadcrumb-item>
 		</el-breadcrumb>
 
 		<!-- 标题区域 -->
-		<div style="margin-bottom: 24px">
-			<h3 style="margin-bottom: 4px; font-size: 20px; font-weight: 600">{{ tripData?.title }}</h3>
+		<div class="public-trip-header">
+			<h3 class="public-trip-title">{{ tripData?.title }}</h3>
 			<el-space>
 				<el-tag type="primary">{{ tripData?.destination }}</el-tag>
-				<span style="color: rgba(0, 0, 0, 0.45); font-size: 14px">
+				<span class="public-trip-date">
 					<el-icon style="margin-right: 4px"><Calendar /></el-icon>
 					{{ formatDateTime(tripData?.startDate) }} ~ {{ formatDateTime(tripData?.endDate) }}
 				</span>
@@ -25,12 +28,22 @@
 		/>
 
 		<template v-if="!loading && tripData">
-			<!-- 自定义 TabBar -->
-			<SkateboardTabBar
-				:active-key="activeTab"
-				:items="tabItems"
-				@update:active-key="(key: string) => setActiveTab(key)"
-			/>
+			<!-- 自定义 TabBar 和导出按钮 -->
+			<div class="public-trip-tab-bar-row">
+				<SkateboardTabBar
+					:active-key="activeTab"
+					:items="tabItems"
+					@update:active-key="(key: string) => setActiveTab(key)"
+				/>
+				<el-button
+					v-if="notes.length > 0 || expenses.length > 0"
+					:icon="Download"
+					@click="showExportModal = true"
+					class="export-notes-btn"
+				>
+					导出游记
+				</el-button>
+			</div>
 
 			<!-- Tabs 内容区（隐藏 el-tabs 自带 header） -->
 			<el-tabs
@@ -42,23 +55,25 @@
 					<!-- 封面图 -->
 					<div
 						v-if="tripData.coverImage"
-						style="margin-bottom: 24px"
+						class="public-trip-cover"
 					>
 						<el-image
 							:src="tripData.coverImage"
-							style="width: 100%; max-height: 500px; object-fit: cover; border-radius: 12px; cursor: pointer"
+							class="public-trip-cover-image"
 							fit="cover"
 							:preview-src-list="[tripData.coverImage]"
 							:preview-teleported="true"
 						/>
 					</div>
 
+					<!-- 概览信息 - 使用 Descriptions 组件实现网格布局 -->
 					<el-descriptions
-						bordered
-						:column="2"
+						:column="3"
+						border
+						class="overview-descriptions"
 					>
 						<el-descriptions-item label="目的地">
-							{{ tripData.destination }}
+							{{ tripData.destination || "-" }}
 						</el-descriptions-item>
 						<el-descriptions-item label="作者">
 							<el-space>
@@ -77,7 +92,10 @@
 							{{ tripData.endDate ? formatDateTime(tripData.endDate) : "-" }}
 						</el-descriptions-item>
 						<el-descriptions-item label="状态">
-							<el-tag :type="tripData.isEnded ? 'primary' : 'success'">
+							<el-tag
+								:type="tripData.isEnded ? 'info' : 'success'"
+								effect="plain"
+							>
 								{{ tripData.isEnded ? "已结束" : "进行中" }}
 							</el-tag>
 						</el-descriptions-item>
@@ -136,11 +154,40 @@
 						<el-table-column
 							prop="note"
 							label="备注"
-							min-width="150"
+							min-width="120"
 							align="center"
 						>
 							<template #default="{ row }">
 								{{ row.note || "-" }}
+							</template>
+						</el-table-column>
+						<el-table-column
+							label="小票"
+							width="100"
+							align="center"
+						>
+							<template #default="{ row }">
+								<el-space
+									v-if="row.receiptImages && row.receiptImages.length > 0"
+									wrap
+									:size="4"
+								>
+									<el-image
+										v-for="(img, i) in row.receiptImages"
+										:key="i"
+										:src="img"
+										style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer"
+										fit="cover"
+										:preview-src-list="row.receiptImages"
+										:initial-index="Number(i)"
+										preview-teleported
+									/>
+								</el-space>
+								<span
+									v-else
+									style="color: #999"
+									>-</span
+								>
 							</template>
 						</el-table-column>
 					</el-table>
@@ -196,7 +243,7 @@
 					<!-- 统计卡片 -->
 					<el-row
 						:gutter="16"
-						style="margin-bottom: 24px"
+						class="public-trip-stats-row"
 					>
 						<el-col
 							:xs="24"
@@ -248,9 +295,9 @@
 							:lg="6"
 						>
 							<el-card shadow="hover">
-								<div style="text-align: center">
-									<div style="font-size: 14px; color: rgba(0, 0, 0, 0.45); margin-bottom: 4px">最高消费类别</div>
-									<div style="font-size: 16px; font-weight: 600; color: #fa8c16">
+								<div class="public-trip-stat-custom">
+									<div class="public-trip-stat-label">最高消费类别</div>
+									<div class="public-trip-stat-value">
 										{{ statsSummary.maxCategory || "-" }}
 									</div>
 								</div>
@@ -355,6 +402,16 @@
 					</el-card>
 				</el-tab-pane>
 			</el-tabs>
+
+			<!-- 游记导出弹窗 -->
+			<ExportModal
+				:open="showExportModal"
+				:trip-id="tripData.id"
+				:trip-title="tripData.title"
+				:notes="notes"
+				:has-expenses="expenses.length > 0"
+				@close="showExportModal = false"
+			/>
 		</template>
 	</div>
 </template>
@@ -362,10 +419,12 @@
 <script setup lang="ts">
 	import { ref, computed, onMounted } from "vue";
 	import { useRoute, useRouter } from "vue-router";
-	import { User, Calendar } from "@element-plus/icons-vue";
+	import { User, Calendar, Download } from "@element-plus/icons-vue";
 	import { ElMessage } from "element-plus";
 	import { getPublicTripById } from "../api/trips";
+	import { useFadeIn } from "../composables/useGsapAnimations";
 	import SkateboardTabBar from "../components/SkateboardTabBar.vue";
+	import ExportModal from "../components/ExportModal.vue";
 	import VChart from "vue-echarts";
 	import { use } from "echarts/core";
 	import { PieChart } from "echarts/charts";
@@ -380,8 +439,12 @@
 	const route = useRoute();
 	const router = useRouter();
 
+	// GSAP 动画
+	const pageRef = useFadeIn(0);
+
 	const loading = ref(true);
 	const activeTab = ref("overview");
+	const showExportModal = ref(false);
 	const tripData = ref<(Trip & { expenses?: Expense[]; notes?: Note[] }) | null>(null);
 
 	const COLORS = ["#667eea", "#764ba2", "#f093fb", "#f5576c", "#4facfe", "#00f2fe", "#43e97b", "#fa709a", "#a18cd1", "#fccb90"];
@@ -559,9 +622,137 @@
 	});
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 	/* 隐藏 el-tabs 自带的 tab header，使用自定义 SkateboardTabBar 替代 */
 	.hidden-tabs-header :deep(.el-tabs__header) {
 		display: none;
+	}
+
+	/* 标签栏和导出按钮行 */
+	.public-trip-tab-bar-row {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+	}
+
+	.export-notes-btn {
+		flex-shrink: 0;
+		margin-bottom: 16px;
+	}
+
+	.public-trip-detail-page {
+		max-width: 1200px;
+		margin: 0 auto;
+	}
+
+	.public-trip-breadcrumb {
+		margin-bottom: 16px;
+	}
+
+	.public-trip-header {
+		margin-bottom: 24px;
+	}
+
+	.public-trip-title {
+		margin-bottom: 4px;
+		font-size: 20px;
+		font-weight: 600;
+	}
+
+	.public-trip-date {
+		color: rgba(0, 0, 0, 0.45);
+		font-size: 14px;
+	}
+
+	.public-trip-cover {
+		margin-bottom: 24px;
+	}
+
+	.public-trip-cover-image {
+		width: 100%;
+		max-height: 500px;
+		object-fit: cover;
+		border-radius: 12px;
+		cursor: pointer;
+	}
+
+	/* 概览 Descriptions 样式 */
+	.overview-descriptions {
+		margin-bottom: 16px;
+	}
+
+	.overview-descriptions :deep(.el-descriptions__label) {
+		width: 120px;
+		font-weight: 500;
+	}
+
+	.public-trip-stats-row {
+		margin-bottom: 24px;
+	}
+
+	.public-trip-stat-custom {
+		text-align: center;
+	}
+
+	.public-trip-stat-label {
+		font-size: 14px;
+		color: rgba(0, 0, 0, 0.45);
+		margin-bottom: 4px;
+	}
+
+	.public-trip-stat-value {
+		font-size: 16px;
+		font-weight: 600;
+		color: #fa8c16;
+	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .public-trip-page {
+		background-color: #141414 !important;
+	}
+
+	.dark-theme .public-trip-title {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .public-trip-date {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+
+	.dark-theme .public-trip-stat-label {
+		color: rgba(255, 255, 255, 0.45) !important;
+	}
+
+	.dark-theme .public-trip-cover-image {
+		border-color: #303030 !important;
+	}
+
+	/* 暗黑主题概览 Descriptions */
+	.dark-theme :deep(.overview-descriptions .el-descriptions__label) {
+		background-color: #2a2a2a !important;
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme :deep(.overview-descriptions .el-descriptions__content) {
+		background-color: #1f1f1f !important;
+		color: #e8e8e8 !important;
+	}
+
+	/* 暗黑主题统计数字 */
+	.dark-theme .public-trip-stat-value {
+		color: #ffa940 !important;
+	}
+
+	/* 暗黑主题面包屑 */
+	.dark-theme .public-trip-breadcrumb :deep(.el-breadcrumb__inner) {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .public-trip-breadcrumb :deep(.el-breadcrumb__inner a) {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .public-trip-breadcrumb :deep(.el-breadcrumb__separator) {
+		color: #595959 !important;
 	}
 </style>

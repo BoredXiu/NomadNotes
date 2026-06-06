@@ -42,6 +42,7 @@ import { DownloadOutlined } from '@ant-design/icons';
 import ExportModal from '../components/ExportModal';
 import CurrencySwitcher from '../components/CurrencySwitcher';
 import { useCurrencyStore } from '../store/currencyStore';
+import { usePageEnter } from '../hooks/useGsapAnimations';
 import {
   PieChart,
   Pie,
@@ -72,6 +73,9 @@ export default function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'expenses');
+
+  // GSAP 页面入场动画
+  const pageRef = usePageEnter(0);
   const [exportModalOpen, setExportModalOpen] = useState(false);
 
   // 多币种支持
@@ -676,7 +680,7 @@ export default function TripDetailPage() {
   ];
 
   return (
-    <div>
+    <div ref={pageRef}>
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[

@@ -1,0 +1,451 @@
+// =============================================
+// NomadNotes Dark Theme Styles
+// =============================================
+
+@use "variables" as *;
+
+.dark-theme {
+  background-color: $dark-bg-page !important;
+  color: $dark-text-primary !important;
+}
+
+// ---- 卡片 ----
+.dark-theme .el-card {
+  background-color: $dark-bg-card !important;
+  border-color: $dark-border !important;
+}
+
+// ---- 表格 ----
+.dark-theme .el-table {
+  background-color: $dark-bg-card !important;
+  color: $dark-text-primary !important;
+
+  th {
+    background-color: $dark-bg-input !important;
+    color: $dark-text-primary !important;
+  }
+
+  tr {
+    background-color: $dark-bg-card !important;
+  }
+
+  &--striped .el-table__body tr.el-table__row--striped td {
+    background-color: #242424 !important;
+  }
+
+  .el-table__empty-block {
+    background-color: $dark-bg-card !important;
+  }
+
+  .el-table__body tr:hover > td.el-table__cell {
+    background-color: $dark-bg-input !important;
+  }
+
+  .el-table__footer-wrapper .el-table__footer td {
+    background-color: #1a1a1a !important;
+    color: $dark-text-primary !important;
+    border-color: $dark-border !important;
+  }
+
+  &--border::after,
+  &--group::after,
+  &::before {
+    background-color: $dark-border !important;
+  }
+
+  .el-table__border-left-patch {
+    background-color: $dark-bg-input !important;
+  }
+
+  &--border .el-table__cell {
+    border-right-color: $dark-border !important;
+  }
+
+  .el-table__fixed-right::before,
+  .el-table__fixed::before {
+    background-color: transparent !important;
+  }
+}
+
+// ---- 统计组件 ----
+.dark-theme .el-statistic__content {
+  color: $dark-text-primary !important;
+}
+
+// ---- 描述列表 ----
+.dark-theme .el-descriptions {
+  background-color: transparent !important;
+
+  &__label {
+    color: $dark-text-primary !important;
+  }
+
+  &__content {
+    color: $dark-text-primary !important;
+  }
+
+  &--border .el-descriptions__cell {
+    border-color: $dark-border !important;
+  }
+
+  .el-descriptions__label:not(.is-bordered-label) {
+    background-color: $dark-bg-input !important;
+    color: $dark-text-secondary !important;
+  }
+
+  .el-descriptions__content:not(.is-bordered-content) {
+    background-color: $dark-bg-card !important;
+    color: $dark-text-primary !important;
+  }
+}
+
+// ---- 分页 ----
+.dark-theme .el-pagination {
+  button,
+  .el-pager li {
+    background-color: $dark-bg-card !important;
+    color: $dark-text-secondary !important;
+  }
+
+  button:hover,
+  .el-pager li:hover {
+    color: $primary-color !important;
+  }
+
+  .el-pager li.is-active {
+    color: $primary-color !important;
+  }
+}
+
+// ---- 标签 ----
+.dark-theme .el-tag {
+  border-color: transparent !important;
+
+  &--plain {
+    background-color: $dark-bg-input !important;
+  }
+}
+
+// ---- 按钮 ----
+.dark-theme .el-button {
+  &--default {
+    background-color: $dark-bg-input !important;
+    border-color: $dark-bg-hover !important;
+    color: $dark-text-primary !important;
+
+    &:hover {
+      background-color: $dark-bg-hover !important;
+      border-color: $dark-border-hover !important;
+      color: #fff !important;
+    }
+
+    &:active {
+      background-color: $dark-bg-card !important;
+    }
+  }
+
+  &--text {
+    color: $dark-text-secondary !important;
+
+    &:hover {
+      color: $dark-text-primary !important;
+      background-color: $dark-bg-input !important;
+    }
+  }
+
+  &--primary {
+    background-color: $primary-color !important;
+    border-color: $primary-color !important;
+
+    &:hover {
+      background-color: $primary-hover !important;
+      border-color: $primary-hover !important;
+    }
+  }
+
+  &--danger {
+    background-color: $danger-color !important;
+    border-color: $danger-color !important;
+
+    &:hover {
+      background-color: $danger-hover !important;
+      border-color: $danger-hover !important;
+    }
+  }
+
+  &--warning {
+    background-color: $warning-color !important;
+    border-color: $warning-color !important;
+  }
+}
+
+// ---- 弹出确认 ----
+.dark-theme .el-popconfirm {
+  background-color: $dark-bg-input !important;
+  border-color: $dark-bg-hover !important;
+  color: $dark-text-primary !important;
+
+  &__title,
+  &__action {
+    color: $dark-text-primary !important;
+  }
+}
+
+// ---- Select 下拉 ----
+.dark-theme .el-select-dropdown {
+  background-color: $dark-bg-input !important;
+  border-color: $dark-bg-hover !important;
+
+  &__item {
+    color: $dark-text-primary !important;
+
+    &:hover,
+    &.is-hovering {
+      background-color: $dark-bg-hover !important;
+    }
+
+    &.is-selected {
+      color: $primary-color !important;
+      background-color: $dark-bg-card !important;
+    }
+  }
+}
+
+.dark-theme .el-popper.is-light {
+  background-color: $dark-bg-input !important;
+  border-color: $dark-bg-hover !important;
+  color: $dark-text-primary !important;
+}
+
+// ---- Cascader ----
+.dark-theme .el-cascader {
+  &__dropdown {
+    background-color: $dark-bg-input !important;
+    border-color: $dark-bg-hover !important;
+  }
+
+  &-node {
+    color: $dark-text-primary !important;
+
+    &:hover,
+    &.is-active,
+    &:not(.is-disabled):hover {
+      background-color: $dark-bg-hover !important;
+    }
+
+    &__label {
+      color: $dark-text-primary !important;
+    }
+  }
+
+  &-menu {
+    border-right-color: $dark-border !important;
+  }
+}
+
+// ---- Autocomplete ----
+.dark-theme .el-autocomplete-suggestion {
+  background-color: $dark-bg-input !important;
+  border-color: $dark-bg-hover !important;
+
+  &__item {
+    color: $dark-text-primary !important;
+
+    &:hover {
+      background-color: $dark-bg-hover !important;
+    }
+
+    &.is-highlighted {
+      background-color: $dark-bg-hover !important;
+      color: $dark-text-primary !important;
+    }
+  }
+}
+
+// ---- 链接 ----
+.dark-theme .el-link {
+  color: $primary-color !important;
+
+  &:hover {
+    color: $primary-hover !important;
+  }
+}
+
+// ---- 消息框 ----
+.dark-theme .el-message-box {
+  background-color: $dark-bg-card !important;
+  border-color: $dark-border !important;
+
+  &__title {
+    color: $dark-text-primary !important;
+  }
+
+  &__message {
+    color: $dark-text-secondary !important;
+  }
+
+  &__content {
+    color: $dark-text-primary !important;
+  }
+}
+
+// ---- 表单 ----
+.dark-theme .el-form-item {
+  &__label {
+    color: $dark-text-secondary !important;
+  }
+
+  &__content {
+    color: $dark-text-primary !important;
+  }
+}
+
+// ---- Input ----
+.dark-theme .el-input {
+  &__wrapper {
+    background-color: $dark-bg-input !important;
+    box-shadow: 0 0 0 1px $dark-bg-hover inset !important;
+
+    &:hover {
+      box-shadow: 0 0 0 1px $dark-border-hover inset !important;
+    }
+
+    &.is-focus {
+      box-shadow: 0 0 0 1px $primary-color inset !important;
+    }
+  }
+
+  &__inner {
+    color: $dark-text-primary !important;
+  }
+}
+
+// ---- Textarea ----
+.dark-theme .el-textarea__inner {
+  background-color: $dark-bg-input !important;
+  color: $dark-text-primary !important;
+  border-color: $dark-bg-hover !important;
+
+  &:hover {
+    border-color: $dark-border-hover !important;
+  }
+
+  &:focus {
+    border-color: $primary-color !important;
+  }
+}
+
+// ---- Select Input ----
+.dark-theme .el-select .el-input__wrapper {
+  background-color: $dark-bg-input !important;
+  box-shadow: 0 0 0 1px $dark-bg-hover inset !important;
+
+  &.is-focus {
+    box-shadow: 0 0 0 1px $primary-color inset !important;
+  }
+}
+
+// ---- DatePicker ----
+.dark-theme .el-date-editor .el-input__wrapper {
+  background-color: $dark-bg-input !important;
+  box-shadow: 0 0 0 1px $dark-bg-hover inset !important;
+}
+
+// ---- Dialog ----
+.dark-theme .el-dialog {
+  background-color: $dark-bg-card !important;
+  border-color: $dark-border !important;
+
+  &__title {
+    color: $dark-text-primary !important;
+  }
+
+  &__body {
+    color: $dark-text-primary !important;
+  }
+}
+
+// ---- Switch ----
+.dark-theme .el-switch__label {
+  color: $dark-text-secondary !important;
+
+  &.is-active {
+    color: $primary-color !important;
+  }
+}
+
+// ---- Divider ----
+.dark-theme .el-divider__text {
+  background-color: $dark-bg-card !important;
+  color: $dark-text-secondary !important;
+}
+
+// ---- Backtop ----
+.dark-theme .el-backtop {
+  background-color: $dark-bg-input !important;
+  color: $dark-text-primary !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+// ---- Loading ----
+.dark-theme .el-loading-mask {
+  background-color: rgba(31, 31, 31, 0.8) !important;
+}
+
+// ---- Tabs ----
+.dark-theme .el-tabs {
+  &__nav-wrap::after {
+    background-color: $dark-border !important;
+  }
+
+  &__item {
+    color: $dark-text-secondary !important;
+
+    &.is-active {
+      color: $primary-color !important;
+    }
+
+    &:hover {
+      color: $dark-text-primary !important;
+    }
+  }
+}
+
+// ---- Checkbox ----
+.dark-theme .el-checkbox {
+  &__label {
+    color: $dark-text-secondary !important;
+  }
+
+  &__inner {
+    background-color: $dark-bg-input !important;
+    border-color: $dark-bg-hover !important;
+  }
+}
+
+// ---- Radio ----
+.dark-theme .el-radio {
+  &__label {
+    color: $dark-text-secondary !important;
+  }
+
+  &__inner {
+    background-color: $dark-bg-input !important;
+    border-color: $dark-bg-hover !important;
+  }
+}
+
+// ---- 面包屑 ----
+.dark-theme .el-breadcrumb {
+  &__inner {
+    color: $dark-text-secondary !important;
+
+    a {
+      color: $dark-text-secondary !important;
+    }
+  }
+
+  &__separator {
+    color: #595959 !important;
+  }
+}

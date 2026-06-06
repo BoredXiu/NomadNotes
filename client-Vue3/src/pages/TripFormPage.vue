@@ -1,6 +1,6 @@
 <template>
-	<div style="max-width: 600px; margin: 0 auto">
-		<el-card>
+	<div class="trip-form-page">
+		<el-card class="trip-form-card">
 			<el-space style="margin-bottom: 24px">
 				<el-button
 					text
@@ -112,26 +112,9 @@
 						:before-upload="handleCoverUpload"
 						accept="image/jpeg,image/png,image/webp"
 					>
-						<div
-							style="
-								width: 102px;
-								height: 102px;
-								border: 1px dashed #d9d9d9;
-								border-radius: 8px;
-								display: flex;
-								flex-direction: column;
-								align-items: center;
-								justify-content: center;
-								cursor: pointer;
-								transition: border-color 0.3s;
-							"
-						>
-							<el-icon
-								:size="20"
-								color="#999"
-								><Plus
-							/></el-icon>
-							<div style="margin-top: 8px; color: #999; font-size: 12px">上传封面</div>
+						<div class="trip-form-cover-placeholder">
+							<el-icon :size="20"><Plus /></el-icon>
+							<div class="trip-form-cover-text">上传封面</div>
 						</div>
 					</el-upload>
 				</el-form-item>
@@ -210,56 +193,87 @@
 	}
 
 	async function handleLocate() {
-		if (!navigator.geolocation) {
-			ElMessage.error("当前浏览器不支持地理定位");
-			return;
-		}
 		locating.value = true;
-		navigator.geolocation.getCurrentPosition(
-			async (position) => {
-				const { latitude, longitude } = position.coords;
-				try {
-					const { data } = await api.get<{ success: boolean; data: { displayName: string } }>("/geocode/reverse", {
-						params: { lat: latitude, lon: longitude },
+
+		// 清除之前的定位错误（如果有）
+		// 先尝试浏览器原生定位
+		if (navigator.geolocation) {
+			try {
+				const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+					navigator.geolocation.getCurrentPosition(resolve, reject, {
+						enableHighAccuracy: true,
+						timeout: 10000,
+						maximumAge: 0,
 					});
-					if (data.success && data.data.displayName) {
-						formData.destination = data.data.displayName;
-						ElMessage.success(`已定位: ${data.data.displayName}`);
-					} else {
-						throw new Error("empty");
-					}
-				} catch {
-					try {
-						const resp = await fetch(
-							`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=zh`,
-						);
-						if (resp.ok) {
-							const json = await resp.json();
-							const parts: string[] = [];
-							if (json.principalSubdivision) parts.push(json.principalSubdivision);
-							if (json.city) parts.push(json.city);
-							if (json.locality && json.locality !== json.city) parts.push(json.locality);
-							formData.destination = parts.join("");
-							ElMessage.success(`已定位: ${parts.join("")}`);
-						}
-					} catch {
-						formData.destination = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-						ElMessage.info("无法获取中文地址，已填入坐标");
-					}
+				});
+
+				const { latitude, longitude } = position.coords;
+				await fillAddressFromCoords(latitude, longitude);
+				locating.value = false;
+				return;
+			} catch (err: unknown) {
+				const geolocErr = err as GeolocationPositionError;
+				// 权限被拒绝时，尝试 IP 定位兜底
+				if (geolocErr.code === 1) {
+					ElMessage.info("浏览器定位被拒绝，尝试通过IP定位...");
+				} else {
+					const messages: Record<number, string> = {
+						2: "无法获取位置信息",
+						3: "定位超时",
+					};
+					ElMessage.error(messages[geolocErr.code] || "定位失败");
+					locating.value = false;
+					return;
 				}
-				locating.value = false;
-			},
-			(err) => {
-				locating.value = false;
-				const messages: Record<number, string> = {
-					1: "请授权定位权限",
-					2: "无法获取位置信息",
-					3: "定位超时",
-				};
-				ElMessage.error(messages[err.code] || "定位失败");
-			},
-			{ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-		);
+			}
+		}
+
+		// IP 定位兜底（浏览器不支持或权限被拒绝时）
+		try {
+			const resp = await fetch("https://ipapi.co/json/");
+			if (resp.ok) {
+				const json = await resp.json();
+				const parts: string[] = [];
+				if (json.region) parts.push(json.region);
+				if (json.city) parts.push(json.city);
+				formData.destination = parts.join("") || `${json.latitude?.toFixed(4)}, ${json.longitude?.toFixed(4)}`;
+				ElMessage.success(`已定位: ${formData.destination}`);
+			}
+		} catch {
+			ElMessage.error("IP定位失败，请手动输入目的地");
+		}
+		locating.value = false;
+	}
+
+	// 从经纬度获取地址
+	async function fillAddressFromCoords(latitude: number, longitude: number) {
+		try {
+			const { data } = await api.get<{ success: boolean; data: { displayName: string } }>("/geocode/reverse", {
+				params: { lat: latitude, lon: longitude },
+			});
+			if (data.success && data.data.displayName) {
+				formData.destination = data.data.displayName;
+				ElMessage.success(`已定位: ${data.data.displayName}`);
+				return;
+			}
+			throw new Error("empty");
+		} catch {
+			try {
+				const resp = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=zh`);
+				if (resp.ok) {
+					const json = await resp.json();
+					const parts: string[] = [];
+					if (json.principalSubdivision) parts.push(json.principalSubdivision);
+					if (json.city) parts.push(json.city);
+					if (json.locality && json.locality !== json.city) parts.push(json.locality);
+					formData.destination = parts.join("");
+					ElMessage.success(`已定位: ${parts.join("")}`);
+				}
+			} catch {
+				formData.destination = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+				ElMessage.info("无法获取中文地址，已填入坐标");
+			}
+		}
 	}
 
 	async function handleSubmit() {
@@ -319,3 +333,55 @@
 		}
 	});
 </script>
+
+<style scoped lang="scss">
+	.trip-form-page {
+		max-width: 600px;
+		margin: 0 auto;
+	}
+
+	.trip-form-cover-placeholder {
+		width: 102px;
+		height: 102px;
+		border: 1px dashed #d9d9d9;
+		border-radius: 8px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: border-color 0.3s;
+	}
+
+	.trip-form-cover-placeholder:hover {
+		border-color: #667eea;
+	}
+
+	.trip-form-cover-text {
+		margin-top: 8px;
+		color: #999;
+		font-size: 12px;
+	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .trip-form-page h4 {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .trip-form-page .el-button--text {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .trip-form-cover-placeholder {
+		border-color: #3a3a3a !important;
+		background-color: #2a2a2a !important;
+	}
+
+	.dark-theme .trip-form-cover-placeholder .el-icon {
+		color: #8c8c8c !important;
+	}
+
+	.dark-theme .trip-form-cover-text {
+		color: #8c8c8c !important;
+	}
+</style>

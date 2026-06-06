@@ -27,9 +27,17 @@ const queryClient = new QueryClient({
   },
 });
 
+// 路由守卫：未登录用户重定向到登录页
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+// 路由守卫：已登录用户重定向到"我的旅程"首页
+function GuestGuard({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  if (isAuthenticated) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -67,8 +75,8 @@ export default function App() {
         <AntApp>
           <BrowserRouter>
             <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/login" element={<GuestGuard><LoginPage /></GuestGuard>} />
+              <Route path="/register" element={<GuestGuard><RegisterPage /></GuestGuard>} />
               <Route path="/public-trip/:id" element={<PublicTripRoute />} />
               <Route
                 element={
