@@ -41,6 +41,18 @@ const User = sequelize.define(
 			type: DataTypes.ENUM("male", "female", "other"),
 			allowNull: true,
 		},
+		// 用户角色：admin 为管理员，user 为普通用户，默认 user
+		role: {
+			type: DataTypes.ENUM("admin", "user"),
+			allowNull: false,
+			defaultValue: "user",
+		},
+		// 账号是否被禁用：0 正常，1 已禁用（禁用后无法登录，公开内容不展示）
+		isDisabled: {
+			type: DataTypes.TINYINT,
+			allowNull: false,
+			defaultValue: 0,
+		},
 		createdAt: {
 			type: DataTypes.DATE,
 			defaultValue: DataTypes.NOW,

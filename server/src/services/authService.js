@@ -26,8 +26,8 @@ async function register({ username, email, password }) {
 		passwordHash,
 	});
 
-	const accessToken = generateAccessToken(user.id);
-	const refreshToken = generateRefreshToken(user.id);
+	const accessToken = generateAccessToken(user.id, user.role);
+	const refreshToken = generateRefreshToken(user.id, user.role);
 
 	return {
 		user: {
@@ -38,6 +38,7 @@ async function register({ username, email, password }) {
 			bio: user.bio,
 			address: user.address,
 			gender: user.gender,
+			role: user.role,
 		},
 		accessToken,
 		refreshToken,
@@ -54,13 +55,18 @@ async function login({ account, password }) {
 		throw new AppError("邮箱或用户名或密码错误", 401);
 	}
 
+	// 检查账号是否被管理员禁用
+	if (user.isDisabled === 1) {
+		throw new AppError("该账号已被管理员禁用，无法登录", 403);
+	}
+
 	const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 	if (!isPasswordValid) {
 		throw new AppError("邮箱或用户名或密码错误", 401);
 	}
 
-	const accessToken = generateAccessToken(user.id);
-	const refreshToken = generateRefreshToken(user.id);
+	const accessToken = generateAccessToken(user.id, user.role);
+	const refreshToken = generateRefreshToken(user.id, user.role);
 
 	return {
 		user: {
@@ -71,6 +77,7 @@ async function login({ account, password }) {
 			bio: user.bio,
 			address: user.address,
 			gender: user.gender,
+			role: user.role,
 		},
 		accessToken,
 		refreshToken,
@@ -86,12 +93,17 @@ async function refreshToken(token) {
 	}
 
 	const user = await User.findByPk(decoded.userId);
-	if (!user) {
-		throw new AppError("用户不存在", 404);
-	}
+    if (!user) {
+        throw new AppError("用户不存在", 404);
+    }
 
-	const accessToken = generateAccessToken(user.id);
-	const newRefreshToken = generateRefreshToken(user.id);
+    // 检查账号是否被管理员禁用，禁用后不允许刷新 token
+    if (user.isDisabled === 1) {
+        throw new AppError("该账号已被管理员禁用，无法继续操作", 403);
+    }
+
+    const accessToken = generateAccessToken(user.id, user.role);
+	const newRefreshToken = generateRefreshToken(user.id, user.role);
 
 	return {
 		user: {
@@ -102,6 +114,7 @@ async function refreshToken(token) {
 			bio: user.bio,
 			address: user.address,
 			gender: user.gender,
+			role: user.role,
 		},
 		accessToken,
 		refreshToken: newRefreshToken,

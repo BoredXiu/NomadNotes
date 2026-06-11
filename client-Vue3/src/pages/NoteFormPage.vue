@@ -80,13 +80,14 @@
 					label="图片"
 				>
 					<el-upload
-						:file-list="fileList"
+						:file-list="tempFiles.map((f, idx) => ({ uid: idx, name: f.fileId, url: f.imageUrl, status: 'success' as const }))"
 						:before-upload="handleFileUpload"
 						:on-remove="handleFileRemove"
 						list-type="picture-card"
 						accept="image/jpeg,image/png,image/webp"
 						:auto-upload="false"
 						multiple
+						:disabled="uploading"
 					>
 						<el-icon :size="24"><Plus /></el-icon>
 					</el-upload>
@@ -113,9 +114,8 @@
 	import { ArrowLeft, Plus, Upload } from "@element-plus/icons-vue";
 	import { ElMessage } from "element-plus";
 	import type { FormInstance, FormRules, UploadFile } from "element-plus";
-	import { createNoteWithTempFiles, getNoteById, updateNote, uploadTmpImages, type TempFileResult } from "../api/notes";
+	import { createNoteWithTempFiles, getNoteById, updateNote, uploadTmpImages } from "../api/notes";
 	import { compressImage } from "../utils/compress";
-	import type { Note } from "../types";
 	import dayjs from "dayjs";
 
 	const route = useRoute();
@@ -123,14 +123,21 @@
 	const formRef = ref<FormInstance>();
 	const submitting = ref(false);
 	const loading = ref(false);
+	const uploading = ref(false);
 	const replacingImages = ref(false);
 
 	const tripId = route.params.tripId as string;
 	const noteId = route.params.noteId as string | undefined;
 	const isEditing = !!noteId;
 
-	const fileList = ref<UploadFile[]>([]);
-	const pendingFiles = ref<File[]>([]);
+	// 已上传到 tmp 的临时文件信息
+	interface TempFileInfo {
+		fileId: string;
+		imageUrl: string;
+		ext: string;
+	}
+
+	const tempFiles = ref<TempFileInfo[]>([]);
 	const existingImages = ref<string[]>([]);
 
 	const formData = reactive({
@@ -147,20 +154,38 @@
 		replacingImages.value = true;
 	}
 
-	function handleFileUpload(file: File) {
+	// 选择图片后立即压缩并上传到 tmp 目录
+	async function handleFileUpload(file: File) {
 		if (file.size > 10 * 1024 * 1024) {
 			ElMessage.warning("图片大小不能超过 10MB");
 			return false;
 		}
-		pendingFiles.value.push(file);
+		uploading.value = true;
+		try {
+			// 客户端压缩图片（最长边 750px，JPEG 0.8 质量）
+			const compressed = await compressImage(file, 750, 0.8);
+			const compressedFile = new File([compressed], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
+			// 上传到服务器 tmp 目录
+			const results = await uploadTmpImages([compressedFile]);
+			const result = results[0];
+			tempFiles.value.push({
+				fileId: result.fileId,
+				imageUrl: result.imageUrl,
+				ext: result.ext,
+			});
+			ElMessage.success(`图片 "${file.name}" 已压缩并暂存`);
+		} catch {
+			ElMessage.error(`图片 "${file.name}" 上传失败`);
+		} finally {
+			uploading.value = false;
+		}
 		return false;
 	}
 
-	function handleFileRemove(file: UploadFile) {
-		const index = pendingFiles.value.indexOf(file.raw as File);
-		if (index > -1) {
-			pendingFiles.value.splice(index, 1);
-		}
+	function handleFileRemove(uploadFile: UploadFile) {
+		// 通过 file.name 匹配 fileId 来移除对应的临时文件
+		const fileId = uploadFile.name;
+		tempFiles.value = tempFiles.value.filter((f) => f.fileId !== fileId);
 	}
 
 	async function handleSubmit() {
@@ -168,7 +193,7 @@
 		const valid = await formRef.value.validate().catch(() => false);
 		if (!valid) return;
 
-		if (!isEditing && pendingFiles.value.length === 0) {
+		if (!isEditing && tempFiles.value.length === 0) {
 			ElMessage.warning("请先上传图片");
 			return;
 		}
@@ -176,12 +201,12 @@
 		submitting.value = true;
 		try {
 			if (isEditing && noteId) {
-				if (replacingImages.value && pendingFiles.value.length > 0) {
-					const tempResults = await uploadTmpImages(pendingFiles.value);
+				if (replacingImages.value && tempFiles.value.length > 0) {
+					// 编辑模式下替换图片：图片已在 tmp 中，保存时后端会移动到 images
 					await updateNote(noteId, {
 						content: formData.content,
 						noteDate: formData.noteDate,
-						tempFiles: tempResults.map((t: TempFileResult) => ({
+						tempFiles: tempFiles.value.map((t: TempFileInfo) => ({
 							fileId: t.fileId,
 							ext: t.ext,
 						})),
@@ -195,11 +220,11 @@
 				ElMessage.success("游记更新成功");
 				router.push(`/trip/${tripId}?tab=notes`);
 			} else {
-				const tempResults = await uploadTmpImages(pendingFiles.value);
+				// 新建游记：图片已在 tmp 中，保存时后端会移动到 images
 				await createNoteWithTempFiles(tripId, {
 					content: formData.content,
 					noteDate: formData.noteDate,
-					tempFiles: tempResults.map((t: TempFileResult) => ({
+					tempFiles: tempFiles.value.map((t: TempFileInfo) => ({
 						fileId: t.fileId,
 						ext: t.ext,
 					})),
@@ -224,12 +249,6 @@
 				formData.noteDate = note.noteDate;
 				if (note.images) {
 					existingImages.value = note.images;
-					fileList.value = note.images.map((url, idx) => ({
-						uid: idx,
-						name: `image-${idx}`,
-						url,
-						status: "success" as const,
-					}));
 				}
 			} catch {
 				ElMessage.error("加载游记失败");

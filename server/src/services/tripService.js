@@ -3,6 +3,7 @@ import Expense from "../models/Expense.js";
 import Note from "../models/Note.js";
 import User from "../models/User.js";
 import { AppError } from "../utils/AppError.js";
+import { Op } from "sequelize";
 import fs from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
@@ -48,15 +49,20 @@ async function getUserTrips(userId, { page = 1, pageSize = 10, sort = "desc" }) 
 	return { list, total: count, page: parseInt(page, 10), pageSize: parseInt(pageSize, 10) };
 }
 
-async function getTripById(tripId, userId) {
-	const trip = await Trip.findOne({ where: { id: tripId } });
+async function getTripById(tripId, userId, userRole) {
+	const trip = await Trip.findOne({
+		where: { id: tripId },
+		include: [{ model: User, attributes: ["id", "username", "avatarUrl", "isDisabled"] }],
+	});
 	if (!trip) {
 		throw new AppError("旅程不存在", 404);
 	}
 
 	const isOwner = trip.userId === userId;
+	const isAdmin = userRole === "admin";
 
-	if (!isOwner && trip.isPublic !== 1) {
+	// 管理员可查看所有旅程，普通用户只能查看自己的或公开的旅程
+	if (!isAdmin && !isOwner && trip.isPublic !== 1) {
 		throw new AppError("无权查看该旅程", 403);
 	}
 
@@ -68,17 +74,23 @@ async function getTripById(tripId, userId) {
 		expenseCount,
 		noteCount,
 		isOwner,
+		isAdmin,
 	};
 }
 
 async function getPublicTripById(tripId) {
 	const trip = await Trip.findOne({
 		where: { id: tripId, isPublic: 1 },
-		include: [{ model: User, attributes: ["id", "username", "avatarUrl"] }],
+		include: [{ model: User, attributes: ["id", "username", "avatarUrl", "isDisabled"] }],
 	});
 
 	if (!trip) {
 		throw new AppError("公开旅程不存在或已设为私密", 404);
+	}
+
+	// 如果作者已被禁用，则不展示该旅程
+	if (trip.User && trip.User.isDisabled === 1) {
+		throw new AppError("该旅程因作者账号状态异常已不可见", 410);
 	}
 
 	const expenses = await Expense.findAll({
@@ -109,12 +121,19 @@ async function updateTrip(tripId, userId, updateData) {
 		throw new AppError("无权修改该旅程", 403);
 	}
 
+	// 允许用户直接修改的字段
+	// isPublic: 设为公开 (1) 需通过审核流程 (submitAudit)，设为私密 (0) 可直接更新
 	const allowedFields = ["title", "destination", "startDate", "endDate", "coverImage", "isEnded", "isPublic"];
 	const filteredData = {};
 	for (const key of allowedFields) {
 		if (updateData[key] !== undefined) {
 			filteredData[key] = updateData[key];
 		}
+	}
+
+	// 防护：禁止通过此接口直接设为公开，必须走审核流程
+	if (filteredData.isPublic === 1) {
+		throw new AppError("公开旅程需提交审核申请，请使用审核流程", 400);
 	}
 
 	await trip.update(filteredData);
@@ -156,8 +175,21 @@ async function deleteTrip(tripId, userId) {
 
 async function getPublicTrips({ page = 1, pageSize = 10 }) {
 	const offset = (page - 1) * pageSize;
+
+	// 先查询被禁用的用户 ID 列表
+	const disabledUsers = await User.findAll({
+		where: { isDisabled: 1 },
+		attributes: ["id"],
+	});
+	const disabledUserIds = disabledUsers.map((u) => u.id);
+
+	const where = { isPublic: 1 };
+	if (disabledUserIds.length > 0) {
+		where.userId = { [Op.notIn]: disabledUserIds };
+	}
+
 	const { count, rows } = await Trip.findAndCountAll({
-		where: { isPublic: 1 },
+		where,
 		order: [["createdAt", "DESC"]],
 		limit: parseInt(pageSize, 10),
 		offset,

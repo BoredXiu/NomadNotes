@@ -3,6 +3,7 @@
 		:model-value="open"
 		title="导出旅程报告"
 		width="520px"
+		append-to-body
 		@update:model-value="emit('close')"
 		destroy-on-close
 	>
@@ -115,9 +116,8 @@
 	import { Download, Document } from "@element-plus/icons-vue";
 	import { ElMessage } from "element-plus";
 	import type { ExportFormat, ExportParams } from "../api/export";
-	import { exportNotes, downloadBlob } from "../api/export";
+	import { exportNotes, exportTripData, downloadBlob } from "../api/export";
 	import type { Note } from "../types";
-	import html2pdf from "html2pdf.js";
 
 	const props = defineProps<{
 		open: boolean;
@@ -135,6 +135,7 @@
 		{ value: "html" as ExportFormat, label: "HTML 网页", icon: Document, ext: ".html" },
 		{ value: "markdown" as ExportFormat, label: "Markdown 文档", icon: Document, ext: ".md" },
 		{ value: "pdf" as ExportFormat, label: "PDF 文档", icon: Document, ext: ".pdf" },
+		{ value: "json" as ExportFormat, label: "JSON 文件", icon: Document, ext: ".json" },
 	];
 
 	const format = ref<ExportFormat>("html");
@@ -175,30 +176,49 @@
 		}
 	}
 
-	async function convertToPDF(htmlContent: string, filename: string) {
-		const container = document.createElement("div");
-		container.style.position = "absolute";
-		container.style.left = "-9999px";
-		container.style.top = "0";
-		container.innerHTML = htmlContent;
-		document.body.appendChild(container);
+	/**
+	 * 在新窗口中打开 HTML 内容并触发打印为 PDF
+	 *
+	 * 方案：浏览器原生 window.print()，无需 html2canvas/jsPDF
+	 *   1. 创建隐藏 iframe 避免弹窗被拦截
+	 *   2. 写入完整 HTML（含 @media print 打印样式）
+	 *   3. 等待资源加载后调用 window.print()
+	 *   4. 用户选择"另存为 PDF"即可下载
+	 */
+	async function openPrintWindow(htmlContent: string) {
+		// 创建隐藏 iframe 避免浏览器拦截弹窗
+		const iframe = document.createElement("iframe");
+		iframe.style.cssText = "position:fixed;width:0;height:0;border:0;visibility:hidden;";
+		document.body.appendChild(iframe);
 
-		try {
-			const opt = {
-				margin: [10, 10, 10, 10] as [number, number, number, number],
-				filename,
-				image: { type: "jpeg" as const, quality: 0.95 },
-				html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-				jsPDF: {
-					unit: "mm",
-					format: "a4",
-					orientation: "portrait" as const,
-				},
-			};
-			await html2pdf().set(opt).from(container).save();
-		} finally {
-			document.body.removeChild(container);
+		const iframeWindow = iframe.contentWindow;
+		if (!iframeWindow) {
+			document.body.removeChild(iframe);
+			throw new Error("无法创建打印窗口");
 		}
+
+		// 写入完整 HTML 到 iframe
+		iframeWindow.document.open();
+		iframeWindow.document.write(htmlContent);
+		iframeWindow.document.close();
+
+		// 等待 iframe 内资源加载完成
+		await new Promise<void>((resolve) => {
+			iframeWindow.onload = () => resolve();
+			// 超时兜底
+			setTimeout(resolve, 3000);
+		});
+
+		// 触发打印对话框
+		iframeWindow.focus();
+		iframeWindow.print();
+
+		// 延迟清理 iframe（打印对话框关闭后）
+		setTimeout(() => {
+			if (document.body.contains(iframe)) {
+				document.body.removeChild(iframe);
+			}
+		}, 1000);
 	}
 
 	async function handleExport() {
@@ -209,6 +229,19 @@
 
 		exporting.value = true;
 		try {
+			// JSON 格式使用独立的旅程数据导出接口
+			// exportTripData 返回的 responseType 为 blob，res.data 已是 Blob 对象
+			if (format.value === "json") {
+				const res = await exportTripData(props.tripId);
+				const blob = res.data;
+				const date = new Date().toISOString().slice(0, 10);
+				const safeTitle = props.tripTitle.replace(/[\\/:*?"<>|]/g, "_");
+				downloadBlob(blob, `${safeTitle}_${date}.json`);
+				ElMessage.success("导出成功");
+				emit("close");
+				return;
+			}
+
 			const params: ExportParams = {
 				tripId: props.tripId,
 				format: format.value === "pdf" ? "html" : format.value,
@@ -221,8 +254,7 @@
 
 			if (format.value === "pdf") {
 				const htmlContent = await blob.text();
-				const filename = `${safeTitle}_${date}.pdf`;
-				await convertToPDF(htmlContent, filename);
+				await openPrintWindow(htmlContent);
 			} else {
 				const ext = formatOptions.find((f) => f.value === format.value)?.ext || ".html";
 				const filename = `${safeTitle}_${date}${ext}`;

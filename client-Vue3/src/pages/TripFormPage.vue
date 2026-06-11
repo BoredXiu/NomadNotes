@@ -21,10 +21,28 @@
 					prop="title"
 					label="旅程名称"
 				>
-					<el-input
-						v-model="formData.title"
-						placeholder="例如：京都红叶之旅"
-					/>
+					<div style="display: flex; gap: 12px; align-items: center; width: 100%">
+						<el-input
+							v-model="formData.title"
+							placeholder="例如：京都红叶之旅"
+							style="flex: 1"
+						/>
+						<el-button
+							type="default"
+							:loading="importing"
+							@click="handleImportNotes"
+						>
+							导入游记
+						</el-button>
+						<!-- 隐藏的文件选择器 -->
+						<input
+							ref="fileInputRef"
+							type="file"
+							accept=".json,application/json"
+							style="display: none"
+							@change="handleFileSelect"
+						/>
+					</div>
 				</el-form-item>
 
 				<el-form-item
@@ -141,10 +159,9 @@
 	import { ElMessage } from "element-plus";
 	import type { FormInstance, FormRules } from "element-plus";
 	import { createTrip, getTripById, updateTrip } from "../api/trips";
-	import { uploadImage } from "../api/upload";
-	import { compressImage } from "../utils/compress";
 	import { uploadFileToTemp, persistSingle } from "../api/expenses";
-	import api from "../api/client";
+	import { reverseGeocode } from "../api/geocode";
+	import { compressImage } from "../utils/compress";
 
 	const route = useRoute();
 	const router = useRouter();
@@ -152,6 +169,8 @@
 	const submitting = ref(false);
 	const uploading = ref(false);
 	const locating = ref(false);
+	const importing = ref(false);
+	const fileInputRef = ref<HTMLInputElement>();
 	const coverPreview = ref<string | null>(null);
 	const uploadedCoverUrl = ref<string | null>(null);
 	const tempFile = ref<{ fileId: string; ext: string } | null>(null);
@@ -229,6 +248,28 @@
 		}
 
 		// IP 定位兜底（浏览器不支持或权限被拒绝时）
+		// 优先使用国内 IP 定位服务，精确到省/市/县级行政单位
+		try {
+			const resp = await fetch("https://whois.pconline.com.cn/ipJson.jsp?json=true");
+			if (resp.ok) {
+				const text = await resp.text();
+				const json = JSON.parse(text);
+				const parts: string[] = [];
+				if (json.pro) parts.push(json.pro); // 省
+				if (json.city && json.city !== json.pro) parts.push(json.city); // 市
+				if (json.region && json.region !== json.city) parts.push(json.region); // 区/县
+				const address = parts.join("");
+				if (address) {
+					formData.destination = address;
+					ElMessage.success(`已IP定位: ${address}`);
+					locating.value = false;
+					return;
+				}
+			}
+		} catch {
+			// 主 API 失败，降级到备用 API
+		}
+
 		try {
 			const resp = await fetch("https://ipapi.co/json/");
 			if (resp.ok) {
@@ -247,32 +288,46 @@
 
 	// 从经纬度获取地址
 	async function fillAddressFromCoords(latitude: number, longitude: number) {
+		const address = await reverseGeocode(latitude, longitude);
+		if (address) {
+			formData.destination = address;
+			ElMessage.success(`已定位: ${address}`);
+		} else {
+			formData.destination = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+			ElMessage.info("无法获取地址，已填入坐标");
+		}
+	}
+
+	// 触发隐藏的文件选择器
+	function handleImportNotes() {
+		fileInputRef.value?.click();
+	}
+
+	// 读取并解析导入的 JSON 文件
+	async function handleFileSelect(event: Event) {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+
+		importing.value = true;
 		try {
-			const { data } = await api.get<{ success: boolean; data: { displayName: string } }>("/geocode/reverse", {
-				params: { lat: latitude, lon: longitude },
-			});
-			if (data.success && data.data.displayName) {
-				formData.destination = data.data.displayName;
-				ElMessage.success(`已定位: ${data.data.displayName}`);
-				return;
-			}
-			throw new Error("empty");
+			const text = await file.text();
+			const data = JSON.parse(text);
+
+			// 从导入的数据中提取旅程信息填充表单
+			if (data.title) formData.title = data.title;
+			if (data.destination) formData.destination = data.destination;
+			if (data.startDate) formData.startDate = data.startDate;
+			if (data.endDate) formData.endDate = data.endDate;
+			if (data.isPublic !== undefined) formData.isPublicBoolean = data.isPublic === 1;
+
+			ElMessage.success("游记数据导入成功");
 		} catch {
-			try {
-				const resp = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=zh`);
-				if (resp.ok) {
-					const json = await resp.json();
-					const parts: string[] = [];
-					if (json.principalSubdivision) parts.push(json.principalSubdivision);
-					if (json.city) parts.push(json.city);
-					if (json.locality && json.locality !== json.city) parts.push(json.locality);
-					formData.destination = parts.join("");
-					ElMessage.success(`已定位: ${parts.join("")}`);
-				}
-			} catch {
-				formData.destination = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-				ElMessage.info("无法获取中文地址，已填入坐标");
-			}
+			ElMessage.error("导入失败，请检查文件格式");
+		} finally {
+			importing.value = false;
+			// 重置文件输入，以便重复选择同一文件
+			input.value = "";
 		}
 	}
 

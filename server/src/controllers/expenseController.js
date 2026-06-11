@@ -22,29 +22,29 @@ async function createExpense(req, res, next) {
 }
 
 async function getTripExpenses(req, res, next) {
-	try {
-		const result = await expenseService.getTripExpenses(req.params.tripId, req.userId, req.query);
-		res.json({
-			success: true,
-			data: result,
-			message: "success",
-		});
-	} catch (error) {
-		next(error);
-	}
+    try {
+        const result = await expenseService.getTripExpenses(req.params.tripId, req.userId, req.query, req.userRole);
+        res.json({
+            success: true,
+            data: result,
+            message: "success",
+        });
+    } catch (error) {
+        next(error);
+    }
 }
 
 async function getExpenseStats(req, res, next) {
-	try {
-		const result = await expenseService.getExpenseStats(req.params.tripId, req.userId);
-		res.json({
-			success: true,
-			data: result,
-			message: "success",
-		});
-	} catch (error) {
-		next(error);
-	}
+    try {
+        const result = await expenseService.getExpenseStats(req.params.tripId, req.userId, req.userRole);
+        res.json({
+            success: true,
+            data: result,
+            message: "success",
+        });
+    } catch (error) {
+        next(error);
+    }
 }
 
 async function deleteExpense(req, res, next) {

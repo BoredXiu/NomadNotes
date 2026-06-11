@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Card,
   Row,
   Col,
   Typography,
-  Button,
   Empty,
   Space,
   Tag,
@@ -19,7 +18,7 @@ import {
   DollarOutlined,
   FileTextOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import * as tripsApi from '../api/trips';
 import { CardListSkeleton } from '../components/Skeletons';
 import type { Trip } from '../types';
@@ -32,6 +31,9 @@ export default function HomePage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  // 从 AppLayout Outlet context 获取内联搜索关键词
+  const outletContext = useOutletContext<{ searchKeyword: string }>();
+  const searchKeyword = outletContext?.searchKeyword || "";
 
   // GSAP 动画
   const pageRef = usePageEnter(0);
@@ -62,6 +64,17 @@ export default function HomePage() {
     fetchTrips();
   }, []);
 
+  // 根据搜索关键词过滤旅程列表（客户端过滤，仅在当前页面数据范围内搜索）
+  const filteredTrips = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase();
+    if (!keyword) return trips;
+    return trips.filter(
+      (trip) =>
+        trip.title.toLowerCase().includes(keyword) ||
+        trip.destination.toLowerCase().includes(keyword),
+    );
+  }, [trips, searchKeyword]);
+
   const handleDelete = async (id: string) => {
     try {
       await tripsApi.deleteTrip(id);
@@ -78,15 +91,17 @@ export default function HomePage() {
 
   return (
     <div ref={pageRef}>
-      <Title level={3} style={{ marginBottom: 24 }}>
+      <Title level={3} style={{ marginBottom: '1.5rem' }}>
         我的旅程
       </Title>
 
       {trips.length === 0 ? (
         <Empty description="还没有旅程，点击上方按钮开始记录吧" />
+      ) : filteredTrips.length === 0 ? (
+        <Empty description="没有匹配的旅程" />
       ) : (
         <Row gutter={[16, 16]} ref={listRef}>
-          {trips.map((trip) => (
+          {filteredTrips.map((trip) => (
             <Col key={trip.id} xs={24} sm={12} md={8} lg={6}>
               <Card
                 hoverable
@@ -96,12 +111,12 @@ export default function HomePage() {
                     <img
                       alt={trip.title}
                       src={trip.coverImage}
-                      style={{ height: 160, objectFit: 'cover' }}
+                      style={{ height: '10rem', objectFit: 'cover' }}
                     />
                   ) : (
                     <div
                       style={{
-                        height: 160,
+                        height: '10rem',   // 160px
                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                         display: 'flex',
                         alignItems: 'center',
@@ -109,7 +124,7 @@ export default function HomePage() {
                       }}
                     >
                       <EnvironmentOutlined
-                        style={{ fontSize: 48, color: 'rgba(255,255,255,0.6)' }}
+                        style={{ fontSize: '3rem', color: 'rgba(255,255,255,0.6)' }}
                       />
                     </div>
                   )

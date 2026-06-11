@@ -28,16 +28,16 @@ async function createNote(req, res, next) {
 }
 
 async function getTripNotes(req, res, next) {
-	try {
-		const notes = await noteService.getTripNotes(req.params.tripId, req.userId, req.query);
-		res.json({
-			success: true,
-			data: notes,
-			message: "success",
-		});
-	} catch (error) {
-		next(error);
-	}
+    try {
+        const notes = await noteService.getTripNotes(req.params.tripId, req.userId, req.query, req.userRole);
+        res.json({
+            success: true,
+            data: notes,
+            message: "success",
+        });
+    } catch (error) {
+        next(error);
+    }
 }
 
 async function deleteNote(req, res, next) {

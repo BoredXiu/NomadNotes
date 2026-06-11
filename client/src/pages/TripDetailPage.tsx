@@ -18,6 +18,7 @@ import {
   Col,
   Statistic,
   Tabs,
+  Input,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -33,6 +34,7 @@ import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import * as tripsApi from '../api/trips';
 import * as expensesApi from '../api/expenses';
 import * as notesApi from '../api/notes';
+import { submitAudit } from '../api/admin';
 import { TripDetailSkeleton } from '../components/Skeletons';
 import SkateboardNav from '../components/SkateboardNav';
 import SkateboardTabBar from '../components/SkateboardTabBar';
@@ -89,7 +91,10 @@ export default function TripDetailPage() {
   };
 
 
-  const isOwner = trip?.isOwner !== false;
+  const isOwner = trip?.isOwner === true;
+  const isAdmin = trip?.isAdmin === true;
+  // 管理员可以查看任何旅程的详细数据（账单/游记/统计）
+  const canViewDetails = isOwner || isAdmin;
 
   const dailyExpenseData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -144,7 +149,7 @@ export default function TripDetailPage() {
       const tripData = await tripsApi.getTripById(id);
       setTrip(tripData);
 
-      if (tripData.isOwner !== false) {
+      if (tripData.isOwner || tripData.isAdmin) {
         const [expensesData, notesData, statsData] = await Promise.all([
           expensesApi.getTripExpenses(id, { pageSize: 100 }),
           notesApi.getTripNotes(id),
@@ -198,12 +203,24 @@ export default function TripDetailPage() {
 
   const handleTogglePublic = async (checked: boolean) => {
     if (!trip) return;
+    // 保存切换前的状态，用于失败回滚
+    const prevIsPublic = trip.isPublic;
     try {
-      await tripsApi.updateTrip(trip.id, { isPublic: checked ? 1 : 0 });
-      message.success(checked ? '已设为公开' : '已设为私密');
-      fetchData();
-    } catch {
-      message.error('操作失败');
+      if (checked) {
+        // 提交公开审核申请（不直接设为公开）
+        await submitAudit(trip.id);
+        message.success("已提交到管理员审核");
+      } else {
+        // 乐观更新：立即更新本地状态，避免界面延迟
+        setTrip((prev) => prev ? { ...prev, isPublic: 0 } : null);
+        await tripsApi.updateTrip(trip.id, { isPublic: 0 });
+        message.success("已设为私密");
+        fetchData();
+      }
+    } catch (error: any) {
+      // 失败时恢复原始状态
+      setTrip((prev) => prev ? { ...prev, isPublic: prevIsPublic } : null);
+      message.error(error?.response?.data?.message || "操作失败");
     }
   };
 
@@ -247,6 +264,7 @@ export default function TripDetailPage() {
       key: 'note',
       align: 'center',
       ellipsis: true,
+      render: (note: string) => note ? <span>{note}</span> : <Text type="secondary">-</Text>,
     },
     {
       title: '小票',
@@ -296,7 +314,7 @@ export default function TripDetailPage() {
   ];
 
   const tabItems = [
-    ...(isOwner ? [
+    ...(canViewDetails ? [
       {
         key: 'expenses',
         label: (
@@ -772,15 +790,16 @@ export default function TripDetailPage() {
               }}
               items={tabItems}
             />
-            {(notes.length > 0 || expenses.length > 0) && (
-              <Button
-                icon={<DownloadOutlined />}
-                onClick={() => setExportModalOpen(true)}
-                style={{ flexShrink: 0, marginBottom: 16 }}
-              >
-                导出游记
-              </Button>
-            )}
+            <Space style={{ flexShrink: 0, marginBottom: 16 }}>
+              {(notes.length > 0 || expenses.length > 0) && (
+                <Button
+                  icon={<DownloadOutlined />}
+                  onClick={() => setExportModalOpen(true)}
+                >
+                  导出游记
+                </Button>
+              )}
+            </Space>
           </div>
         )}
         items={tabItems}

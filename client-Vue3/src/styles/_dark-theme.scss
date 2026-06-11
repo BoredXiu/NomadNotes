@@ -449,3 +449,168 @@
     color: #595959 !important;
   }
 }
+
+// ---- Empty 状态 ----
+.dark-theme .el-empty {
+  &__description p {
+    color: $dark-text-secondary !important;
+  }
+
+  &__image svg {
+    fill: #595959 !important;
+  }
+}
+
+// ---- Upload 上传 ----
+.dark-theme .el-upload {
+  &-dragger {
+    background-color: $dark-bg-card !important;
+    border-color: $dark-border !important;
+  }
+
+  &__tip {
+    color: $dark-text-secondary !important;
+  }
+}
+
+// ---- Image 图片 ----
+.dark-theme .el-image {
+  &__wrapper {
+    background-color: $dark-bg-input !important;
+  }
+
+  &__placeholder {
+    background-color: $dark-bg-input !important;
+    color: $dark-text-secondary !important;
+  }
+
+  &__error {
+    background-color: $dark-bg-input !important;
+    color: $dark-text-secondary !important;
+  }
+}
+
+// ---- 查看大图遮罩 ----
+.dark-theme .el-image-viewer {
+  &__mask {
+    background-color: rgba(0, 0, 0, 0.85) !important;
+  }
+
+  &__close {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  &__actions__inner {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+}
+
+// ---- Result ----
+.dark-theme .el-result {
+  &__title p {
+    color: $dark-text-primary !important;
+  }
+
+  &__subtitle p {
+    color: $dark-text-secondary !important;
+  }
+}
+
+// ---- Skeleton ----
+.dark-theme .el-skeleton {
+  &__item {
+    background-color: $dark-bg-input !important;
+  }
+}
+
+// ---- Alert ----
+.dark-theme .el-alert {
+  &--info {
+    background-color: rgba(24, 144, 255, 0.15) !important;
+    border-color: rgba(24, 144, 255, 0.3) !important;
+  }
+
+  &--success {
+    background-color: rgba(82, 196, 26, 0.15) !important;
+    border-color: rgba(82, 196, 26, 0.3) !important;
+  }
+
+  &--warning {
+    background-color: rgba(250, 173, 20, 0.15) !important;
+    border-color: rgba(250, 173, 20, 0.3) !important;
+  }
+
+  &--error {
+    background-color: rgba(255, 77, 79, 0.15) !important;
+    border-color: rgba(255, 77, 79, 0.3) !important;
+  }
+}
+
+// ---- Collapse ----
+.dark-theme .el-collapse {
+  border-color: $dark-border !important;
+
+  &-item {
+    &__header {
+      background-color: $dark-bg-card !important;
+      border-color: $dark-border !important;
+      color: $dark-text-primary !important;
+
+      &:hover {
+        background-color: $dark-bg-input !important;
+      }
+    }
+
+    &__wrap {
+      background-color: $dark-bg-card !important;
+      border-color: $dark-border !important;
+    }
+
+    &__content {
+      color: $dark-text-secondary !important;
+    }
+  }
+}
+
+// ---- Card header ----
+.dark-theme .el-card__header {
+  border-bottom-color: $dark-border !important;
+  color: $dark-text-primary !important;
+}
+
+// ---- 滚动条 ----
+.dark-theme {
+  ::-webkit-scrollbar {
+    background-color: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #3a3a3a !important;
+    border-radius: 4px;
+
+    &:hover {
+      background-color: #4a4a4a !important;
+    }
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+}
+
+// ---- Page header ----
+.dark-theme .el-page-header {
+  &__title,
+  &__content {
+    color: $dark-text-primary !important;
+  }
+}
+
+// ---- Drawer ----
+.dark-theme .el-drawer {
+  background-color: $dark-bg-card !important;
+
+  &__title {
+    color: $dark-text-primary !important;
+  }
+}

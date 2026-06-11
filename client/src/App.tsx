@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, App as AntApp, theme as antTheme } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './store/authStore';
 import { useThemeStore } from './store/themeStore';
 import AppLayout from './components/AppLayout';
+import AppFooter from './components/AppFooter';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ExplorePage from './pages/ExplorePage';
@@ -17,6 +18,7 @@ import ExpenseFormPage from './pages/ExpenseFormPage';
 import NoteFormPage from './pages/NoteFormPage';
 import TripFormPage from './pages/TripFormPage';
 import SearchResultsPage from './pages/SearchResultsPage';
+import AdminPage from './pages/AdminPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,11 +54,29 @@ function PublicTripRoute() {
     );
   }
 
-  return <PublicTripDetailPage />;
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1 }}>
+        <PublicTripDetailPage />
+      </div>
+      <AppFooter />
+    </div>
+  );
 }
 
 export default function App() {
   const mode = useThemeStore((s) => s.mode);
+
+  // 同步暗黑主题类名到 document.body
+  useEffect(() => {
+    if (mode === 'dark') {
+      document.body.classList.add('dark-theme');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-theme');
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }, [mode]);
 
   const themeConfig = useMemo(
     () => ({
@@ -96,6 +116,7 @@ export default function App() {
                 <Route path="/trip/:tripId/note/new" element={<NoteFormPage />} />
                 <Route path="/trip/:tripId/note/:noteId/edit" element={<NoteFormPage />} />
                 <Route path="/search" element={<SearchResultsPage />} />
+                <Route path="/admin" element={<AdminPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

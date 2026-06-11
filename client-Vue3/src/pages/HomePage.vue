@@ -12,19 +12,24 @@
 			description="还没有旅程，点击上方按钮开始记录吧"
 		/>
 
+		<el-empty
+			v-else-if="filteredTrips.length === 0"
+			description="没有匹配的旅程"
+		/>
+
 		<el-row
 			v-else
 			ref="listRef"
 			:gutter="16"
 		>
 			<el-col
-				v-for="trip in trips"
+				v-for="trip in filteredTrips"
 				:key="trip.id"
 				:xs="24"
 				:sm="12"
 				:md="8"
 				:lg="6"
-				style="margin-bottom: 16px"
+				style="margin-bottom: 1rem"
 			>
 				<el-card
 					:body-style="{ padding: 0 }"
@@ -36,12 +41,12 @@
 					<el-image
 						v-if="trip.coverImage"
 						:src="trip.coverImage"
-						style="width: 100%; height: 160px; object-fit: cover"
+						style="width: 100%; height: 10rem; object-fit: cover"
 						fit="cover"
 					/>
 					<div
 						v-else
-						style="height: 160px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center"
+						style="height: 10rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center"
 					>
 						<MyTripIcon
 							:size="48"
@@ -50,8 +55,10 @@
 					</div>
 
 					<!-- 卡片内容 -->
-					<div style="padding: 16px 16px 12px">
-						<div style="margin-bottom: 8px">
+					<div style="padding: 1rem 1rem 0.75rem">
+						<!-- 16px 16px 12px -->
+						<div style="margin-bottom: 0.5rem">
+							<!-- 8px -->
 							<el-space :size="4">
 								<el-tag
 									v-if="trip.isPublic === 1"
@@ -70,26 +77,30 @@
 						</div>
 						<div
 							class="trip-card-info"
-							style="display: flex; flex-direction: column; gap: 4px; font-size: 13px"
+							style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.8125rem"
 						>
 							<div>
-								<el-icon style="margin-right: 4px"><Location /></el-icon>
+								<el-icon style="margin-right: 0.25rem"><Location /></el-icon>
+								<!-- 4px -->
 								{{ trip.destination }}
 							</div>
 							<div class="trip-card-info-secondary">
-								<el-icon style="margin-right: 4px"><Timer /></el-icon>
+								<el-icon style="margin-right: 0.25rem"><Timer /></el-icon>
+								<!-- 4px -->
 								{{ formatDate(trip.startDate) }} - {{ formatDate(trip.endDate) }}
 							</div>
 							<div
 								class="trip-card-info-secondary"
-								style="display: flex; gap: 12px"
+								style="display: flex; gap: 0.75rem"
 							>
 								<span>
-									<el-icon style="margin-right: 4px"><Money /></el-icon>
+									<el-icon style="margin-right: 0.25rem"><Money /></el-icon>
+									<!-- 4px -->
 									{{ trip.expenseCount }} 笔账单
 								</span>
 								<span>
-									<el-icon style="margin-right: 4px"><Document /></el-icon>
+									<el-icon style="margin-right: 0.25rem"><Document /></el-icon>
+									<!-- 4px -->
 									{{ trip.noteCount }} 篇游记
 								</span>
 							</div>
@@ -131,14 +142,14 @@
 			:total="total"
 			:page-size="pageSize"
 			layout="prev, pager, next"
-			style="text-align: center; margin-top: 16px"
+			style="text-align: center; margin-top: 1rem"
 			@current-change="handlePageChange"
 		/>
 	</div>
 </template>
 
 <script setup lang="ts">
-	import { ref, onMounted, watch } from "vue";
+	import { ref, onMounted, watch, computed, inject, type Ref } from "vue";
 	import { useRouter } from "vue-router";
 	import { Edit, Delete, Location, Timer, Money, Document } from "@element-plus/icons-vue";
 	import { ElMessage } from "element-plus";
@@ -155,6 +166,16 @@
 	const total = ref(0);
 	const currentPage = ref(1);
 	const pageSize = 50;
+
+	// 注入搜索关键词，用于客户端过滤（仅当前页面数据范围内搜索）
+	const searchKeyword = inject<Ref<string>>("searchKeyword", ref(""));
+
+	// 根据搜索关键词过滤旅程列表（标题、目的地匹配）
+	const filteredTrips = computed(() => {
+		const keyword = searchKeyword.value.trim().toLowerCase();
+		if (!keyword) return trips.value;
+		return trips.value.filter((trip) => trip.title.toLowerCase().includes(keyword) || trip.destination.toLowerCase().includes(keyword));
+	});
 
 	// GSAP 动画
 	const pageRef = usePageEnter(0);
@@ -204,8 +225,8 @@
 
 <style scoped lang="scss">
 	.home-page-title {
-		margin-bottom: 24px;
-		font-size: 24px;
+		margin-bottom: 1.5rem; // 24px
+		font-size: 1.5rem; // 24px
 		font-weight: 600;
 	}
 
@@ -213,14 +234,14 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		border-top: 1px solid #f0f0f0;
+		border-top: 0.0625rem solid #f0f0f0; // 1px
 		padding: 0;
 		background: #fafafa;
 	}
 
 	.trip-card-action-btn {
 		flex: 1;
-		height: 46px;
+		height: 2.875rem; // 46px
 		color: rgba(0, 0, 0, 0.45);
 		transition: color 0.3s;
 	}
@@ -234,8 +255,8 @@
 	}
 
 	.trip-card-action-divider {
-		width: 1px;
-		height: 24px;
+		width: 0.0625rem; // 1px
+		height: 1.5rem; // 24px
 		background: #f0f0f0;
 	}
 

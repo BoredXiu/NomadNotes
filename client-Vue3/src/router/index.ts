@@ -84,6 +84,12 @@ const router = createRouter({
 					component: () => import("../pages/SearchResultsPage.vue"),
 				},
 				{
+					path: "admin",
+					name: "Admin",
+					component: () => import("../pages/AdminPage.vue"),
+					meta: { requiresAdmin: true },
+				},
+				{
 					path: "explore",
 					name: "Explore",
 					component: () => import("../pages/ExplorePage.vue"),
@@ -100,12 +106,27 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, _from, next) => {
-	const token = localStorage.getItem("accessToken");
+	// 使用 sessionStorage（每个标签页独立）避免多账号 token 冲突
+	const token = sessionStorage.getItem("accessToken");
 
 	if (to.meta.requiresAuth && !token) {
 		next("/login");
 	} else if (to.meta.guest && token) {
 		next("/");
+	} else if (to.meta.requiresAdmin) {
+		// 管理员权限校验：从 sessionStorage 读取用户角色
+		try {
+			const userStr = sessionStorage.getItem("user");
+			const user = userStr ? JSON.parse(userStr) : null;
+			if (!user || user.role !== "admin") {
+				next("/");
+				return;
+			}
+		} catch {
+			next("/");
+			return;
+		}
+		next();
 	} else {
 		next();
 	}

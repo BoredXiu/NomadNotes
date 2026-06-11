@@ -30,16 +30,16 @@ async function getUserTrips(req, res, next) {
 }
 
 async function getTripById(req, res, next) {
-	try {
-		const trip = await tripService.getTripById(req.params.id, req.userId);
-		res.json({
-			success: true,
-			data: trip,
-			message: "success",
-		});
-	} catch (error) {
-		next(error);
-	}
+    try {
+        const trip = await tripService.getTripById(req.params.id, req.userId, req.userRole);
+        res.json({
+            success: true,
+            data: trip,
+            message: "success",
+        });
+    } catch (error) {
+        next(error);
+    }
 }
 
 async function updateTrip(req, res, next) {

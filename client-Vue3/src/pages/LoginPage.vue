@@ -3,123 +3,160 @@
 		:style="{
 			minHeight: '100vh',
 			display: 'flex',
-			justifyContent: 'center',
-			alignItems: 'center',
+			flexDirection: 'column',
 			backgroundImage: `url(${bgLogin})`,
 			backgroundPosition: 'center',
 			backgroundSize: 'cover',
 			backgroundRepeat: 'no-repeat',
 		}"
 	>
-		<el-card
-			ref="formRef_gsap"
-			style="width: 400px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15)"
+		<!-- 登录表单容器：flex-grow 撑开，内部 flex 居中 -->
+		<div
+			:style="{
+				flex: 1,
+				display: 'flex',
+				justifyContent: 'center',
+				alignItems: 'center',
+				padding: '24px 16px',
+			}"
 		>
-			<el-space
-				direction="vertical"
-				:size="24"
-				style="width: 100%"
-				alignment="center"
+			<el-card
+				ref="formRef_gsap"
+				style="width: 400px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15)"
 			>
-				<div style="text-align: center">
-					<h2
-						class="login-page-title"
-						style="margin: 0 0 4px 0; font-size: 30px; font-weight: 600; line-height: 1.35"
-					>
-						NomadNotes
-					</h2>
-					<div
-						class="login-page-subtitle"
-						style="color: rgba(0, 0, 0, 0.45); font-size: 14px; margin-bottom: 8px"
-					>
-						游迹 - 记录每一段旅程
-					</div>
-				</div>
-
-				<el-form
-					ref="formRef"
-					:model="formData"
-					:rules="rules"
-					label-position="top"
+				<el-space
+					direction="vertical"
+					:size="24"
 					style="width: 100%"
-					@submit.prevent="handleLogin"
+					alignment="center"
 				>
-					<el-form-item prop="account">
-						<el-input
-							v-model="formData.account"
-							:prefix-icon="Message"
-							placeholder="邮箱或用户名"
-							size="large"
-						/>
-					</el-form-item>
-
-					<el-form-item prop="password">
-						<el-input
-							v-model="formData.password"
-							:prefix-icon="Lock"
-							type="password"
-							placeholder="密码"
-							size="large"
-							show-password
-						/>
-					</el-form-item>
-
-					<el-form-item prop="captchaText">
-						<div style="display: flex; gap: 8px; width: 100%">
-							<el-input
-								v-model="formData.captchaText"
-								:prefix-icon="Key"
-								placeholder="验证码"
-								size="large"
-								style="width: 60%"
-							/>
-							<div
-								style="width: 38%; cursor: pointer; height: 40px; flex-shrink: 0"
-								@click="fetchCaptcha"
-								v-html="captchaSvg"
-							/>
-						</div>
-					</el-form-item>
-
-					<el-form-item>
-						<el-button
-							type="primary"
-							:loading="loading"
-							native-type="submit"
-							size="large"
-							style="font-size: 16px; height: 40px; width: 100%"
+					<div style="text-align: center">
+						<h2
+							class="login-page-title"
+							style="margin: 0 0 4px 0; font-size: 30px; font-weight: 600; line-height: 1.35"
 						>
-							登录
-						</el-button>
-					</el-form-item>
-				</el-form>
+							NomadNotes
+						</h2>
+						<div
+							class="login-page-subtitle"
+							style="color: rgba(0, 0, 0, 0.45); font-size: 14px; margin-bottom: 8px"
+						>
+							游迹 - 记录每一段旅程
+						</div>
+					</div>
 
-				<div style="text-align: center">
-					<el-link
-						type="primary"
-						@click="router.push('/register')"
+					<!-- 账号被禁用提示 -->
+					<el-alert
+						v-if="isDisabledNotice"
+						title="账号已被禁用"
+						description="您的账号已被管理员禁用，无法继续使用。如有疑问请联系管理员。"
+						type="error"
+						show-icon
+						:closable="true"
+					/>
+
+					<!-- 登录失败错误提示（持久显示，不会自动消失） -->
+					<el-alert
+						v-if="errorMessage"
+						title="登录失败"
+						:description="errorMessage"
+						type="error"
+						show-icon
+						:closable="true"
+						@close="errorMessage = ''"
+					/>
+
+					<el-form
+						ref="formRef"
+						:model="formData"
+						:rules="rules"
+						label-position="top"
+						style="width: 100%"
+						@submit.prevent="handleLogin"
 					>
-						还没有账号？立即注册
-					</el-link>
-				</div>
-			</el-space>
-		</el-card>
+						<el-form-item prop="account">
+							<el-input
+								v-model="formData.account"
+								:prefix-icon="Message"
+								placeholder="邮箱或用户名"
+								size="large"
+							/>
+						</el-form-item>
+
+						<el-form-item prop="password">
+							<el-input
+								v-model="formData.password"
+								:prefix-icon="Lock"
+								type="password"
+								placeholder="密码"
+								size="large"
+								show-password
+							/>
+						</el-form-item>
+
+						<el-form-item prop="captchaText">
+							<div style="display: flex; gap: 8px; width: 100%">
+								<el-input
+									v-model="formData.captchaText"
+									:prefix-icon="Key"
+									placeholder="验证码"
+									size="large"
+									style="width: 60%"
+								/>
+								<div
+									style="width: 38%; cursor: pointer; height: 40px; flex-shrink: 0"
+									@click="fetchCaptcha"
+									v-html="captchaSvg"
+								/>
+							</div>
+						</el-form-item>
+
+						<el-form-item>
+							<el-button
+								type="primary"
+								:loading="loading"
+								native-type="submit"
+								size="large"
+								style="font-size: 16px; height: 40px; width: 100%"
+							>
+								登录
+							</el-button>
+						</el-form-item>
+					</el-form>
+
+					<div style="text-align: center">
+						<el-link
+							type="primary"
+							@click="router.push('/register')"
+						>
+							还没有账号？立即注册
+						</el-link>
+					</div>
+				</el-space>
+			</el-card>
+		</div>
+
+		<!-- 页脚：ICP 备案信息 -->
+		<AppFooter />
 	</div>
 </template>
 
 <script setup lang="ts">
 	import { ref, reactive, onMounted } from "vue";
 	import { Message, Lock, Key } from "@element-plus/icons-vue";
-	import { useRouter } from "vue-router";
+	import { useRouter, useRoute } from "vue-router";
 	import { ElMessage } from "element-plus";
 	import type { FormInstance, FormRules } from "element-plus";
 	import * as authApi from "../api/auth";
 	import { useAuthStore } from "../stores/authStore";
 	import bgLogin from "../assets/bg-login.jpg";
 	import { useFadeIn } from "../composables/useGsapAnimations";
+	import AppFooter from "../components/AppFooter.vue";
 
 	const router = useRouter();
+	const route = useRoute();
 	const authStore = useAuthStore();
+	const isDisabledNotice = route.query.disabled === "1";
 	const formRef = ref<FormInstance>();
 	const loading = ref(false);
 	const captchaSvg = ref("");
@@ -127,6 +164,7 @@
 	// GSAP 动画
 	const formRef_gsap = useFadeIn(0.2);
 	const captchaId = ref("");
+	const errorMessage = ref("");
 
 	const formData = reactive({
 		account: "",
@@ -156,6 +194,7 @@
 		if (!valid) return;
 
 		loading.value = true;
+		errorMessage.value = ""; // 每次提交前清除之前的错误
 		try {
 			const result = await authApi.login({
 				account: formData.account,
@@ -168,7 +207,8 @@
 			router.push("/");
 		} catch (error: unknown) {
 			const err = error as { response?: { data?: { message?: string } } };
-			ElMessage.error(err?.response?.data?.message || "登录失败");
+			// 使用持久化错误提示，而非自动消失的 message 提示
+			errorMessage.value = err?.response?.data?.message || "登录失败，请检查账号密码是否正确";
 			fetchCaptcha();
 		} finally {
 			loading.value = false;

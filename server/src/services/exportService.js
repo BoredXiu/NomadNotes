@@ -446,8 +446,47 @@ function buildHTML(trip, notes, expenses) {
     }
 
     @media print {
-      body { padding: 20px; }
-      .section { page-break-inside: avoid; }
+      /* 打印样式：优化 PDF 输出效果 */
+      @page {
+        size: A4;
+        margin: 15mm;
+      }
+      body {
+        padding: 0;
+        max-width: 100%;
+        background: #fff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .section {
+        page-break-inside: avoid;
+      }
+      .header {
+        page-break-after: avoid;
+      }
+      .note-entry {
+        page-break-inside: avoid;
+      }
+      .data-table {
+        page-break-inside: auto;
+      }
+      .data-table tr {
+        page-break-inside: avoid;
+      }
+      .data-table thead {
+        display: table-header-group;
+      }
+      .data-table tfoot {
+        display: table-footer-group;
+      }
+      /* 确保背景色在打印时保留 */
+      .stat-card,
+      .overview-grid,
+      .data-table th,
+      .data-table tfoot td {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
   </style>
 </head>
@@ -676,7 +715,8 @@ export async function exportNotes(tripId, userId, format = "html", noteIds = nul
 	if (!trip) {
 		throw new AppError("旅程不存在", 404);
 	}
-	if (trip.userId !== userId) {
+	// 允许旅程所有者导出，也允许公开旅程被其他已登录用户导出
+	if (trip.userId !== userId && trip.isPublic !== 1) {
 		throw new AppError("无权导出该旅程游记", 403);
 	}
 

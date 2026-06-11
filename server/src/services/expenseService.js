@@ -26,12 +26,13 @@ async function createExpense(tripId, userId, expenseData) {
 	return expense;
 }
 
-async function getTripExpenses(tripId, userId, query) {
+async function getTripExpenses(tripId, userId, query, userRole) {
 	const trip = await Trip.findOne({ where: { id: tripId } });
 	if (!trip) {
 		throw new AppError("旅程不存在", 404);
 	}
-	if (trip.userId !== userId) {
+	// 管理员可查看任何旅程的账单
+	if (trip.userId !== userId && userRole !== "admin") {
 		throw new AppError("无权查看该旅程", 403);
 	}
 
@@ -59,12 +60,13 @@ async function getTripExpenses(tripId, userId, query) {
 	return { list: rows, total: count, page: parseInt(page, 10), pageSize: parseInt(pageSize, 10) };
 }
 
-async function getExpenseStats(tripId, userId) {
+async function getExpenseStats(tripId, userId, userRole) {
 	const trip = await Trip.findOne({ where: { id: tripId } });
 	if (!trip) {
 		throw new AppError("旅程不存在", 404);
 	}
-	if (trip.userId !== userId) {
+	// 管理员可查看任何旅程的统计
+	if (trip.userId !== userId && userRole !== "admin") {
 		throw new AppError("无权查看该旅程", 403);
 	}
 

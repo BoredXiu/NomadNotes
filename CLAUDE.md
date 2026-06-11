@@ -20,7 +20,7 @@
 
 ### 特殊说明
 
-- `notes.vector_images` 与 `images` 一一对应，存储由 potrace 生成的 SVG 路径，转换失败则为 null。
+- `notes.vector_images` 与 `images` 一一对应，预留字段，当前始终为 null。
 - 级联删除由 service 层手动实现（先删子记录再删父记录）。
 
 ## API 规范
@@ -56,12 +56,11 @@
 - `POST /api/trips/:tripId/notes` (multipart, 图片自动压缩)、`GET /api/trips/:tripId/notes`、`DELETE /api/notes/:id`
 - `POST /api/upload` (独立上传)
 
-**游记矢量化细节**：
+**游记图片处理细节**：
 
-- 创建游记时，接收图片文件保存至 `uploads/images/`
-- 调用 `@realness.online/potrace` 为每张图生成 SVG 存入 `uploads/vectors/`
-- `vector_images` 按顺序存储 SVG 路径，失败则对应项为 null
-- 删除游记时，同时删除原始图片与 SVG 文件
+- 创建游记时，接收图片文件经 Canvas 压缩后保存至 `uploads/images/`
+- `vector_images` 为预留字段，当前始终为 null
+- 删除游记时，同时删除对应的原始图片文件
 
 ## 前端规范
 

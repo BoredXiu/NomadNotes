@@ -121,7 +121,7 @@
 									size="small"
 									type="danger"
 									text
-									style="position: absolute; top: -8px; right: -8px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15)"
+									class="receipt-delete-btn"
 									@click="handleRemoveReceipt(idx)"
 								/>
 							</div>
@@ -315,6 +315,20 @@
 	}
 
 	/* 暗黑主题支持 */
+	.receipt-delete-btn {
+		position: absolute;
+		top: -8px;
+		right: -8px;
+		border-radius: 50%;
+		background: #fff;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+	}
+
+	.dark-theme .receipt-delete-btn {
+		background: #2a2a2a !important;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
+	}
+
 	.dark-theme .expense-form-page h4 {
 		color: #e8e8e8 !important;
 	}

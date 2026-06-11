@@ -2,9 +2,27 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/nomadnotes.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- PWA 元标签 -->
+    <meta name="theme-color" content="#001529" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="NomadNotes" />
+    <meta name="application-name" content="NomadNotes - 游迹" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <!-- Web App Manifest（vite-plugin-pwa 构建时也会注入，此处显式声明以确保开发模式可发现） -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.svg" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.svg" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.svg" />
+    <!-- 图标 -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="mask-icon" href="/nomadnotes.svg" color="#001529" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>NomadNotes - 游迹</title>
+    <!-- 预连接后端服务 -->
+    <link rel="preconnect" href="/api" />
   </head>
   <body>
     <div id="root"></div>

@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { Modal, Select, Checkbox, Space, Button, message, List, Tag } from "antd";
 import { FilePdfOutlined, FileTextOutlined, CodeOutlined, DownloadOutlined } from "@ant-design/icons";
 import type { ExportFormat, ExportParams } from "../api/export";
-import { exportNotes, downloadBlob } from "../api/export";
+import { exportNotes, exportTripData, downloadBlob } from "../api/export";
 import type { Note } from "../types";
-import html2pdf from "html2pdf.js";
 
 interface ExportModalProps {
 	open: boolean;
@@ -20,6 +19,7 @@ const FORMAT_OPTIONS: { value: ExportFormat; label: string; icon: React.ReactNod
 	{ value: "html", label: "HTML 网页", icon: <CodeOutlined />, ext: ".html" },
 	{ value: "markdown", label: "Markdown 文档", icon: <FileTextOutlined />, ext: ".md" },
 	{ value: "pdf", label: "PDF 文档", icon: <FilePdfOutlined />, ext: ".pdf" },
+	{ value: "json", label: "JSON 文件", icon: <CodeOutlined />, ext: ".json" },
 ];
 
 /**
@@ -50,37 +50,49 @@ const ExportModal: React.FC<ExportModalProps> = ({ open, onClose, tripId, tripTi
 		}
 	};
 
-	// 将 HTML 内容转换为 PDF 并下载
-	const convertToPDF = async (htmlContent: string, filename: string) => {
-		// 创建临时容器渲染 HTML
-		const container = document.createElement("div");
-		container.style.position = "absolute";
-		container.style.left = "-9999px";
-		container.style.top = "0";
-		container.innerHTML = htmlContent;
-		document.body.appendChild(container);
+	/**
+	 * 在新窗口中打开 HTML 内容并触发打印为 PDF
+	 *
+	 * 方案：浏览器原生 window.print()，无需 html2canvas/jsPDF
+	 *   1. 创建隐藏 iframe 避免弹窗被拦截
+	 *   2. 写入完整 HTML（含 @media print 打印样式）
+	 *   3. 等待资源加载后调用 window.print()
+	 *   4. 用户选择"另存为 PDF"即可下载
+	 */
+	const openPrintWindow = async (htmlContent: string) => {
+		// 创建隐藏 iframe 避免浏览器拦截弹窗
+		const iframe = document.createElement("iframe");
+		iframe.style.cssText = "position:fixed;width:0;height:0;border:0;visibility:hidden;";
+		document.body.appendChild(iframe);
 
-		try {
-			const opt = {
-				margin: [10, 10, 10, 10] as [number, number, number, number],
-				filename: filename,
-				image: { type: "jpeg" as const, quality: 0.95 },
-				html2canvas: {
-					scale: 2,
-					useCORS: true,
-					letterRendering: true,
-				},
-				jsPDF: {
-					unit: "mm",
-					format: "a4",
-					orientation: "portrait" as const,
-				},
-			};
-
-			await html2pdf().set(opt).from(container).save();
-		} finally {
-			document.body.removeChild(container);
+		const iframeWindow = iframe.contentWindow;
+		if (!iframeWindow) {
+			document.body.removeChild(iframe);
+			throw new Error("无法创建打印窗口");
 		}
+
+		// 写入完整 HTML 到 iframe
+		iframeWindow.document.open();
+		iframeWindow.document.write(htmlContent);
+		iframeWindow.document.close();
+
+		// 等待 iframe 内资源加载完成
+		await new Promise<void>((resolve) => {
+			iframeWindow.onload = () => resolve();
+			// 超时兜底
+			setTimeout(resolve, 3000);
+		});
+
+		// 触发打印对话框
+		iframeWindow.focus();
+		iframeWindow.print();
+
+		// 延迟清理 iframe（打印对话框关闭后）
+		setTimeout(() => {
+			if (document.body.contains(iframe)) {
+				document.body.removeChild(iframe);
+			}
+		}, 1000);
 	};
 
 	// 执行导出
@@ -92,6 +104,19 @@ const ExportModal: React.FC<ExportModalProps> = ({ open, onClose, tripId, tripTi
 
 		setExporting(true);
 		try {
+			// JSON 格式使用独立的旅程数据导出接口
+			// exportTripData 返回的 responseType 为 blob，res.data 已是 Blob 对象
+			if (format === "json") {
+				const res = await exportTripData(tripId);
+				const blob = res.data;
+				const date = new Date().toISOString().slice(0, 10);
+				const safeTitle = tripTitle.replace(/[\\/:*?"<>|]/g, "_");
+				downloadBlob(blob, `${safeTitle}_${date}.json`);
+				message.success("导出成功");
+				onClose();
+				return;
+			}
+
 			const params: ExportParams = {
 				tripId,
 				// PDF 导出时先请求 HTML 内容，前端再转换
@@ -106,10 +131,9 @@ const ExportModal: React.FC<ExportModalProps> = ({ open, onClose, tripId, tripTi
 			const safeTitle = tripTitle.replace(/[\\/:*?"<>|]/g, "_");
 
 			if (format === "pdf") {
-				// PDF: 读取 HTML 内容并转换为 PDF
+				// PDF: 读取 HTML 内容并在新窗口中打印
 				const htmlContent = await blob.text();
-				const filename = `${safeTitle}_${date}.pdf`;
-				await convertToPDF(htmlContent, filename);
+				await openPrintWindow(htmlContent);
 			} else {
 				const ext = FORMAT_OPTIONS.find((f) => f.value === format)?.ext || ".html";
 				const filename = `${safeTitle}_${date}${ext}`;

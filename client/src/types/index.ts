@@ -6,6 +6,8 @@ export interface User {
 	bio: string | null;
 	address: string | null;
 	gender: string | null;
+	/** 用户角色：admin 管理员 / user 普通用户 */
+	role: "admin" | "user";
 }
 
 export interface Trip {
@@ -22,6 +24,7 @@ export interface Trip {
 	expenseCount?: number;
 	noteCount?: number;
 	isOwner?: boolean;
+	isAdmin?: boolean;
 	notes?: Note[];
 	User?: { id: string; username: string; avatarUrl: string | null };
 }

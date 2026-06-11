@@ -6,6 +6,7 @@ export interface User {
 	bio: string | null;
 	address: string | null;
 	gender: string | null;
+	role: "admin" | "user";
 }
 
 export interface Trip {
@@ -22,6 +23,7 @@ export interface Trip {
 	expenseCount?: number;
 	noteCount?: number;
 	isOwner?: boolean;
+	isAdmin?: boolean;
 	notes?: Note[];
 	User?: { id: string; username: string; avatarUrl: string | null };
 }
@@ -48,7 +50,6 @@ export interface Note {
 	tripId: string;
 	content: string;
 	images: string[] | null;
-	vectorImages: string[] | null;
 	noteDate: string;
 	createdAt: string;
 }

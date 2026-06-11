@@ -3,116 +3,129 @@
 		:style="{
 			minHeight: '100vh',
 			display: 'flex',
-			justifyContent: 'center',
-			alignItems: 'center',
+			flexDirection: 'column',
 			backgroundImage: `url(${bgLogin})`,
 			backgroundPosition: 'center',
 			backgroundSize: 'cover',
 			backgroundRepeat: 'no-repeat',
 		}"
 	>
-		<el-card
-			ref="formRef_gsap"
-			style="width: 400px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15)"
+		<!-- 注册表单容器：flex-grow 撑开，内部 flex 居中 -->
+		<div
+			:style="{
+				flex: 1,
+				display: 'flex',
+				justifyContent: 'center',
+				alignItems: 'center',
+				padding: '24px 16px',
+			}"
 		>
-			<el-space
-				direction="vertical"
-				:size="24"
-				style="width: 100%"
-				alignment="center"
+			<el-card
+				ref="formRef_gsap"
+				style="width: 400px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15)"
 			>
-				<div style="text-align: center">
-					<h2
-						class="login-page-title"
-						style="margin: 0 0 4px 0; font-size: 30px; font-weight: 600; line-height: 1.35"
-					>
-						NomadNotes
-					</h2>
-					<div
-						class="login-page-subtitle"
-						style="color: rgba(0, 0, 0, 0.45); font-size: 14px; margin-bottom: 8px"
-					>
-						游迹 - 创建你的账号
-					</div>
-				</div>
-
-				<el-form
-					ref="formRef"
-					:model="formData"
-					:rules="rules"
-					label-position="top"
+				<el-space
+					direction="vertical"
+					:size="24"
 					style="width: 100%"
-					@submit.prevent="handleRegister"
+					alignment="center"
 				>
-					<el-form-item prop="username">
-						<el-input
-							v-model="formData.username"
-							:prefix-icon="User"
-							placeholder="用户名"
-							size="large"
-						/>
-					</el-form-item>
-
-					<el-form-item prop="email">
-						<el-input
-							v-model="formData.email"
-							:prefix-icon="Message"
-							placeholder="邮箱"
-							size="large"
-						/>
-					</el-form-item>
-
-					<el-form-item prop="password">
-						<el-input
-							v-model="formData.password"
-							:prefix-icon="Lock"
-							type="password"
-							placeholder="密码"
-							size="large"
-							show-password
-						/>
-					</el-form-item>
-
-					<el-form-item prop="captchaText">
-						<div style="display: flex; gap: 8px; width: 100%">
-							<el-input
-								v-model="formData.captchaText"
-								:prefix-icon="Key"
-								placeholder="验证码"
-								size="large"
-								style="width: 60%"
-							/>
-							<div
-								style="width: 38%; cursor: pointer; height: 40px; flex-shrink: 0"
-								@click="fetchCaptcha"
-								v-html="captchaSvg"
-							/>
-						</div>
-					</el-form-item>
-
-					<el-form-item>
-						<el-button
-							type="primary"
-							:loading="loading"
-							native-type="submit"
-							size="large"
-							style="font-size: 16px; height: 40px; width: 100%"
+					<div style="text-align: center">
+						<h2
+							class="login-page-title"
+							style="margin: 0 0 4px 0; font-size: 30px; font-weight: 600; line-height: 1.35"
 						>
-							注册
-						</el-button>
-					</el-form-item>
-				</el-form>
+							NomadNotes
+						</h2>
+						<div
+							class="login-page-subtitle"
+							style="color: rgba(0, 0, 0, 0.45); font-size: 14px; margin-bottom: 8px"
+						>
+							游迹 - 创建你的账号
+						</div>
+					</div>
 
-				<div style="text-align: center">
-					<el-link
-						type="primary"
-						@click="router.push('/login')"
+					<el-form
+						ref="formRef"
+						:model="formData"
+						:rules="rules"
+						label-position="top"
+						style="width: 100%"
+						@submit.prevent="handleRegister"
 					>
-						已有账号？立即登录
-					</el-link>
-				</div>
-			</el-space>
-		</el-card>
+						<el-form-item prop="username">
+							<el-input
+								v-model="formData.username"
+								:prefix-icon="User"
+								placeholder="用户名"
+								size="large"
+							/>
+						</el-form-item>
+
+						<el-form-item prop="email">
+							<el-input
+								v-model="formData.email"
+								:prefix-icon="Message"
+								placeholder="邮箱"
+								size="large"
+							/>
+						</el-form-item>
+
+						<el-form-item prop="password">
+							<el-input
+								v-model="formData.password"
+								:prefix-icon="Lock"
+								type="password"
+								placeholder="密码"
+								size="large"
+								show-password
+							/>
+						</el-form-item>
+
+						<el-form-item prop="captchaText">
+							<div style="display: flex; gap: 8px; width: 100%">
+								<el-input
+									v-model="formData.captchaText"
+									:prefix-icon="Key"
+									placeholder="验证码"
+									size="large"
+									style="width: 60%"
+								/>
+								<div
+									style="width: 38%; cursor: pointer; height: 40px; flex-shrink: 0"
+									@click="fetchCaptcha"
+									v-html="captchaSvg"
+								/>
+							</div>
+						</el-form-item>
+
+						<el-form-item>
+							<el-button
+								type="primary"
+								:loading="loading"
+								native-type="submit"
+								size="large"
+								style="font-size: 16px; height: 40px; width: 100%"
+							>
+								注册
+							</el-button>
+						</el-form-item>
+					</el-form>
+
+					<div style="text-align: center">
+						<el-link
+							type="primary"
+							@click="router.push('/login')"
+						>
+							已有账号？立即登录
+						</el-link>
+					</div>
+				</el-space>
+			</el-card>
+		</div>
+
+		<!-- 页脚：ICP 备案信息 -->
+		<AppFooter />
 	</div>
 </template>
 
@@ -126,6 +139,7 @@
 	import { useAuthStore } from "../stores/authStore";
 	import bgLogin from "../assets/bg-login.jpg";
 	import { useFadeIn } from "../composables/useGsapAnimations";
+	import AppFooter from "../components/AppFooter.vue";
 
 	const router = useRouter();
 	const authStore = useAuthStore();

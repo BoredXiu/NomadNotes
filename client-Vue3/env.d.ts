@@ -12,6 +12,12 @@ declare module "china-area-data" {
 	export default data;
 }
 
+// PWA 安装提示事件类型
+interface BeforeInstallPromptEvent extends Event {
+    prompt: () => Promise<void>;
+    userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
 // 为缺少类型导出的图标提供声明
 declare module "@element-plus/icons-vue" {
 	import type { DefineComponent } from "vue";

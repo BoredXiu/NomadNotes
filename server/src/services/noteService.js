@@ -38,12 +38,14 @@ async function createNote(tripId, userId, { content, noteDate, imageFiles }) {
 	return note;
 }
 
-async function getTripNotes(tripId, userId, { sort = "asc" }) {
+async function getTripNotes(tripId, userId, query, userRole) {
+	const sort = query?.sort || "asc";
 	const trip = await Trip.findOne({ where: { id: tripId } });
 	if (!trip) {
 		throw new AppError("旅程不存在", 404);
 	}
-	if (trip.userId !== userId) {
+	// 管理员可查看任何旅程的游记
+	if (trip.userId !== userId && userRole !== "admin") {
 		throw new AppError("无权查看该旅程", 403);
 	}
 

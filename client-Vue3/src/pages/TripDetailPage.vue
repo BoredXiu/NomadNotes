@@ -79,14 +79,16 @@
 				:items="tabItems"
 				@update:active-key="setActiveTab"
 			/>
-			<el-button
-				v-if="notes.length > 0 || expenses.length > 0"
-				:icon="Download"
-				@click="showExportModal = true"
-				class="export-notes-btn"
-			>
-				导出游记
-			</el-button>
+			<div class="tab-bar-actions">
+				<el-button
+					v-if="notes.length > 0 || expenses.length > 0"
+					:icon="Download"
+					@click="showExportModal = true"
+					class="export-notes-btn"
+				>
+					导出游记
+				</el-button>
+			</div>
 		</div>
 
 		<!-- 账单 Tab -->
@@ -124,7 +126,7 @@
 					align="center"
 				>
 					<template #default="{ row }">
-						{{ formatDate(row.expenseDate) }}
+						<span>{{ formatDate(row.expenseDate) }}</span>
 					</template>
 				</el-table-column>
 				<el-table-column
@@ -134,7 +136,9 @@
 					align="center"
 				>
 					<template #default="{ row }">
-						<el-tag>{{ row.category }}</el-tag>
+						<el-tag>
+							<span>{{ row.category }}</span>
+						</el-tag>
 					</template>
 				</el-table-column>
 				<el-table-column
@@ -154,7 +158,7 @@
 					align="center"
 				>
 					<template #default="{ row }">
-						{{ row.note || "-" }}
+						<span>{{ row.note || "-" }}</span>
 					</template>
 				</el-table-column>
 				<el-table-column
@@ -181,7 +185,7 @@
 						</el-space>
 						<span
 							v-else
-							style="color: #999"
+							class="table-no-data"
 							>-</span
 						>
 					</template>
@@ -255,7 +259,7 @@
 					align="center"
 				>
 					<template #default="{ row }">
-						{{ formatFullDate(row.noteDate) }}
+						<span>{{ formatFullDate(row.noteDate) }}</span>
 					</template>
 				</el-table-column>
 				<el-table-column
@@ -265,7 +269,10 @@
 					min-width="200"
 				>
 					<template #default="{ row }">
-						<div style="white-space: pre-wrap; text-align: center">{{ row.content }}</div>
+						<div
+							style="white-space: pre-wrap; text-align: center"
+							v-html="row.content"
+						/>
 					</template>
 				</el-table-column>
 				<el-table-column
@@ -291,7 +298,7 @@
 						</el-space>
 						<span
 							v-else
-							style="color: #999"
+							class="table-no-data"
 							>-</span
 						>
 					</template>
@@ -584,6 +591,7 @@
 	import { getTripById, updateTrip } from "../api/trips";
 	import { getTripExpenses, getExpenseStats, deleteExpense } from "../api/expenses";
 	import { getTripNotes, deleteNote } from "../api/notes";
+	import { submitAudit } from "../api/admin";
 	import { useCurrencyStore } from "../stores/currencyStore";
 	import SkateboardNav from "../components/SkateboardNav.vue";
 	import SkateboardTabBar from "../components/SkateboardTabBar.vue";
@@ -772,6 +780,7 @@
 		const { columns } = param;
 		const sums: string[] = [];
 		const currencySymbol = currencyStore.getCurrencySymbol();
+		// 使用当前账单数据计算合计
 		const total = currencyStore.convertAmount(expenseTotalAmount.value).toFixed(currencyStore.currency === "JPY" ? 0 : 2);
 
 		columns.forEach((_column, index) => {
@@ -820,12 +829,25 @@
 		if (!trip.value) return;
 		const checked = val === true;
 		try {
-			await updateTrip(trip.value.id, { isPublic: checked ? 1 : 0 });
-			ElMessage.success(checked ? "已设为公开" : "已设为私密");
+			if (checked) {
+				// 提交公开审核申请（不再直接设为公开）
+				await submitAudit(trip.value.id);
+				ElMessage.success("已提交到管理员审核");
+				// 恢复开关状态为私密，直到审核通过
+				isPublic.value = false;
+			} else {
+				// 乐观更新：立即更新本地状态，避免界面延迟
+				isPublic.value = false;
+				if (trip.value) trip.value.isPublic = 0;
+				await updateTrip(trip.value.id, { isPublic: 0 });
+				ElMessage.success("已设为私密");
+				loadData();
+			}
+		} catch (error: any) {
+			// 失败时恢复原始状态
+			isPublic.value = !checked;
 			loadData();
-		} catch {
-			ElMessage.error("操作失败");
-			isPublic.value = !checked; // 恢复状态
+			ElMessage.error(error?.response?.data?.message || "操作失败");
 		}
 	}
 
@@ -947,9 +969,17 @@
 		justify-content: space-between;
 	}
 
-	.export-notes-btn {
+	.tab-bar-actions {
+		display: flex;
+		align-items: center;
+		gap: 12px;
 		flex-shrink: 0;
 		margin-bottom: 16px;
+	}
+
+	.export-notes-btn {
+		flex-shrink: 0;
+		margin-bottom: 0;
 	}
 
 	/* 概览 Descriptions 样式 */
@@ -1027,6 +1057,14 @@
 	}
 
 	/* 暗黑主题支持 */
+	.table-no-data {
+		color: #999;
+	}
+
+	.dark-theme .table-no-data {
+		color: #595959 !important;
+	}
+
 	.dark-theme .trip-detail-header-card {
 		background-color: #1f1f1f !important;
 		border-color: #303030 !important;

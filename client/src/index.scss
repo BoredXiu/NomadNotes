@@ -4,15 +4,21 @@
 
 @use "styles/variables" as *;
 @use "styles/mixins" as *;
-
+// ---- 全局重置 ----
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+// 设定 rem 基准值：1rem = 16px
+html {
+  font-size: 16px;
+}
+
 body {
   font-family: $font-family;
+  font-size: $font-size-base;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: $bg-page;
@@ -102,14 +108,14 @@ body {
   transition: box-shadow 0.3s ease;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);  // 4px 12px
   }
 }
 
 // ---- 自定义时间线 ----
 .custom-timeline {
   .ant-timeline-item-tail {
-    border-left: 2px solid $border-color;
+    border-left: 0.125rem solid $border-color;  // 2px
   }
 
   .ant-timeline-item-head {
@@ -118,10 +124,10 @@ body {
     border: none !important;
     border-color: transparent !important;
     box-shadow: none !important;
-    width: 28px !important;
-    height: 28px !important;
-    left: -4px !important;
-    top: 4px !important;
+    width: 1.75rem !important;   // 28px
+    height: 1.75rem !important;
+    left: -0.25rem !important;   // -4px
+    top: 0.25rem !important;     // 4px
   }
 
   .ant-timeline-item-head-custom {
@@ -130,8 +136,8 @@ body {
     border: none !important;
     border-color: transparent !important;
     padding: 0 !important;
-    width: 28px !important;
-    height: 28px !important;
+    width: 1.75rem !important;   // 28px
+    height: 1.75rem !important;
     top: 0 !important;
   }
 
@@ -175,13 +181,13 @@ body {
 
 // ---- 滚动条 ----
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 0.375rem;   // 6px
+  height: 0.375rem;
 }
 
 ::-webkit-scrollbar-thumb {
   background: $text-disabled;
-  border-radius: 3px;
+  border-radius: 0.1875rem;  // 3px
 
   &:hover {
     background: $text-tertiary;
@@ -196,4 +202,123 @@ body {
 ::selection {
   background: $primary-color;
   color: #fff;
+}
+
+// =============================================
+// 暗黑主题自定义样式
+// =============================================
+html[data-theme="dark"],
+.dark-theme {
+  // 页面背景
+  body {
+    background-color: #141414;
+  }
+
+  // 卡片和容器背景
+  .ant-card,
+  .ant-form,
+  .ant-modal-content {
+    background-color: #1f1f1f !important;
+  }
+
+  // 表格
+  .ant-table {
+    background-color: #1f1f1f;
+
+    .ant-table-thead > tr > th {
+      background-color: #1a1a1a !important;
+      color: #e8e8e8;
+    }
+
+    .ant-table-tbody > tr > td {
+      background-color: #1f1f1f !important;
+      color: #e8e8e8;
+      border-color: #303030;
+    }
+  }
+
+  // 输入框和选择器
+  .ant-input,
+  .ant-input-number,
+  .ant-select-selector,
+  .ant-picker {
+    background-color: #1a1a1a !important;
+    border-color: #303030 !important;
+    color: #e8e8e8 !important;
+  }
+
+  // 统计卡片
+  .stat-card,
+  .overview-grid {
+    background-color: #1a1a1a !important;
+  }
+
+  // 导出信息框
+  .export-info-box {
+    background-color: #1a2e1a !important;
+    border-color: #2a4a2a !important;
+    color: #73d13d !important;
+  }
+
+  // 标签和标记
+  .ant-tag {
+    background-color: #1a1a1a !important;
+    border-color: #303030 !important;
+  }
+
+  // 滚动条
+  ::-webkit-scrollbar-thumb {
+    background: #424242;
+
+    &:hover {
+      background: #555;
+    }
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1f1f1f;
+  }
+}
+
+// =============================================
+// H5 移动端响应式适配（rem 基准: 1rem = 16px）
+// =============================================
+@media (max-width: 48rem) {  // 768px
+  // 卡片在移动端占全宽，减少内边距
+  .ant-card {
+    border-radius: 0.5rem;   // 8px
+  }
+
+  // 表格横向滚动优化
+  .ant-table-wrapper {
+    overflow-x: auto;
+  }
+
+  // 模态框在移动端全屏显示
+  .ant-modal {
+    max-width: calc(100vw - 1rem);
+    margin: 1rem auto;
+  }
+
+  // 按钮组间距优化
+  .ant-space {
+    gap: 0.5rem !important;  // 8px
+
+    .ant-btn {
+      padding: 0 0.75rem;   // 12px
+      font-size: 0.875rem;   // 14px
+    }
+  }
+
+  // 输入框字体优化，避免 iOS 缩放
+  .ant-input,
+  .ant-select-selector {
+    font-size: 1rem;         // 16px（移动端保持可读性）
+  }
+
+  // Tag 标签尺寸优化
+  .ant-tag {
+    padding: 0 0.25rem;
+    font-size: 0.75rem;
+  }
 }

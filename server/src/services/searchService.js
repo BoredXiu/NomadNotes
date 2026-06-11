@@ -33,31 +33,19 @@ export async function search({ keyword, scope = "all", sortBy = "relevance", pag
 	const searchPromises = [];
 
 	if (scope === "all" || scope === "trips") {
-		searchPromises.push(
-			searchTrips(trimmedKeyword, keywordPattern, userId).then((items) =>
-				items.map((item) => ({ ...item, type: "trip" }))
-			),
-		);
+		searchPromises.push(searchTrips(trimmedKeyword, keywordPattern, userId).then((items) => items.map((item) => ({ ...item, type: "trip" }))));
 	} else {
 		searchPromises.push(Promise.resolve([]));
 	}
 
 	if (scope === "all" || scope === "notes") {
-		searchPromises.push(
-			searchNotes(trimmedKeyword, keywordPattern, userId).then((items) =>
-				items.map((item) => ({ ...item, type: "note" }))
-			),
-		);
+		searchPromises.push(searchNotes(trimmedKeyword, keywordPattern, userId).then((items) => items.map((item) => ({ ...item, type: "note" }))));
 	} else {
 		searchPromises.push(Promise.resolve([]));
 	}
 
 	if (scope === "all" || scope === "expenses") {
-		searchPromises.push(
-			searchExpenses(trimmedKeyword, keywordPattern, userId).then((items) =>
-				items.map((item) => ({ ...item, type: "expense" }))
-			),
-		);
+		searchPromises.push(searchExpenses(trimmedKeyword, keywordPattern, userId).then((items) => items.map((item) => ({ ...item, type: "expense" }))));
 	} else {
 		searchPromises.push(Promise.resolve([]));
 	}
@@ -189,14 +177,8 @@ async function searchTrips(keyword, pattern, userId) {
 	const trips = await Trip.findAll({
 		where: {
 			// 只搜索自己的旅程或公开旅程
-			[Op.or]: [
-				{ userId: userId || "" },
-				{ isPublic: 1 },
-			],
-			[Op.or]: [
-				{ title: { [Op.like]: pattern } },
-				{ destination: { [Op.like]: pattern } },
-			],
+			[Op.or]: [{ userId: userId || "" }, { isPublic: 1 }],
+			[Op.or]: [{ title: { [Op.like]: pattern } }, { destination: { [Op.like]: pattern } }],
 		},
 		include: [
 			{
@@ -273,10 +255,7 @@ async function searchNotes(keyword, pattern, userId) {
 async function searchExpenses(keyword, pattern, userId) {
 	const expenses = await Expense.findAll({
 		where: {
-			[Op.or]: [
-				{ note: { [Op.like]: pattern } },
-				{ category: { [Op.like]: pattern } },
-			],
+			[Op.or]: [{ note: { [Op.like]: pattern } }, { category: { [Op.like]: pattern } }],
 		},
 		include: [
 			{
@@ -322,14 +301,8 @@ export async function getSearchSuggestions(keyword, userId) {
 	// 搜索匹配的旅程标题
 	const trips = await Trip.findAll({
 		where: {
-			[Op.or]: [
-				{ userId: userId || "" },
-				{ isPublic: 1 },
-			],
-			[Op.or]: [
-				{ title: { [Op.like]: pattern } },
-				{ destination: { [Op.like]: pattern } },
-			],
+			[Op.or]: [{ userId: userId || "" }, { isPublic: 1 }],
+			[Op.or]: [{ title: { [Op.like]: pattern } }, { destination: { [Op.like]: pattern } }],
 		},
 		attributes: ["title", "destination"],
 		limit: 5,

@@ -1,121 +1,140 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Input, AutoComplete, Grid } from "antd";
+import React, { useState, useRef, useCallback, useMemo } from "react";
+import { Input, Button, Grid } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getSearchSuggestions } from "../api/search";
 
-// 防抖延迟
-const DEBOUNCE_MS = 300;
+// 搜索触发去抖延迟（ms），防止快速点击/回车引起重复导航
+const SEARCH_DEBOUNCE_MS = 400;
+// 跳转后 loading 重置延迟
+const LOADING_RESET_MS = 600;
 
 /**
  * 全局搜索栏组件
- * 提供搜索输入、自动补全建议功能
+ * 用户主动触发搜索机制（点击搜索按钮或按下 Enter 键），无实时自动补全
+ * 包含去抖处理、loading 状态反馈
+ * @param inline 内联搜索模式：在页面内过滤数据而非跳转到搜索结果页
+ * @param onSearch inline 模式下的搜索回调
  */
-const SearchBar: React.FC<{ style?: React.CSSProperties }> = ({ style }) => {
-	const [keyword, setKeyword] = useState("");
-	const [suggestions, setSuggestions] = useState<{ label: React.ReactNode; value: string }[]>([]);
-	const [loading, setLoading] = useState(false);
-	const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const navigate = useNavigate();
-	const screens = Grid.useBreakpoint();
+const SearchBar: React.FC<{
+    style?: React.CSSProperties;
+    inline?: boolean;
+    onSearch?: (keyword: string) => void;
+}> = ({ style, inline, onSearch }) => {
+    const [keyword, setKeyword] = useState("");
+    const [searching, setSearching] = useState(false);
+    const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const navigate = useNavigate();
+    const screens = Grid.useBreakpoint();
+    const isMobile = useMemo(() => !screens.md, [screens.md]);
 
-	// 获取搜索建议
-	const fetchSuggestions = useCallback(async (query: string) => {
-		if (!query || query.trim().length < 1) {
-			setSuggestions([]);
-			return;
-		}
-		setLoading(true);
-		try {
-			const data = await getSearchSuggestions(query);
-			setSuggestions(
-				data.map((item) => ({
-					value: item.text,
-					label: (
-						<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-							<span>{item.text}</span>
-							<span
-								style={{
-									fontSize: 12,
-									color: "#999",
-									padding: "0 4px",
-									background: "#f5f5f5",
-									borderRadius: 2,
-								}}
-							>
-								{item.type === "trip" ? "旅程" : "目的地"}
-							</span>
-						</div>
-					),
-				})),
-			);
-		} catch {
-			setSuggestions([]);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+    // 容器宽度（rem: 1rem = 16px）
+    const containerWidth = useMemo(() => (isMobile ? '11.25rem' : '16.25rem'), [isMobile]);  // 180px, 260px
 
-	// 防抖输入处理
-	const handleInputChange = (value: string) => {
-		setKeyword(value);
-		if (debounceTimer.current) {
-			clearTimeout(debounceTimer.current);
-		}
-		debounceTimer.current = setTimeout(() => {
-			fetchSuggestions(value);
-		}, DEBOUNCE_MS);
-	};
+    /**
+     * 触发搜索：去抖后跳转到搜索结果页
+     * searching 状态防止重复触发，按钮展示 loading 图标
+     */
+    const handleSearch = useCallback(() => {
+        const trimmed = keyword.trim();
+        if (!trimmed || searching) return;
 
-	// 选择建议
-	const handleSelect = (value: string) => {
-		setKeyword(value);
-		navigate(`/search?q=${encodeURIComponent(value)}`);
-	};
+        if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current);
+        }
 
-	// 提交搜索
-	const handleSearch = () => {
-		const trimmed = keyword.trim();
-		if (!trimmed) return;
-		navigate(`/search?q=${encodeURIComponent(trimmed)}`);
-	};
+        // 内联搜索模式：不跳转，由父组件消费搜索词过滤数据
+        if (inline && onSearch) {
+            onSearch(trimmed);
+            return;
+        }
 
-	// 回车搜索
-	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter") {
-			handleSearch();
-		}
-	};
+        setSearching(true);
+        debounceTimer.current = setTimeout(() => {
+            navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+            // 路由跳转完成后重置 loading 状态
+            setTimeout(() => {
+                setSearching(false);
+            }, LOADING_RESET_MS);
+        }, SEARCH_DEBOUNCE_MS);
+    }, [keyword, searching, inline, onSearch, navigate]);
 
-	// 清理定时器
-	useEffect(() => {
-		return () => {
-			if (debounceTimer.current) {
-				clearTimeout(debounceTimer.current);
-			}
-		};
-	}, []);
+    // Enter 键触发搜索
+    const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                handleSearch();
+            }
+        },
+        [handleSearch],
+    );
 
-	const isMobile = !screens.md;
+    // 输入变化
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setKeyword(e.target.value);
+    }, []);
 
-	return (
-		<AutoComplete
-			value={keyword}
-			options={loading ? [{ value: "", label: "搜索中..." }] : suggestions}
-			onChange={handleInputChange}
-			onSelect={handleSelect}
-			style={{ width: isMobile ? 120 : 200, ...style }}
-			popupMatchSelectWidth={false}
-		>
-			<Input
-				placeholder={isMobile ? "搜索" : "搜索游记、账单..."}
-				prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-				onKeyDown={handleKeyDown}
-				allowClear
-				variant="filled"
-			/>
-		</AutoComplete>
-	);
+    // 清空输入时重置状态
+    const handleClear = useCallback(() => {
+        setKeyword("");
+        setSearching(false);
+        if (inline && onSearch) {
+            onSearch("");
+        }
+        if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current);
+            debounceTimer.current = null;
+        }
+    }, [inline, onSearch]);
+
+    return (
+        <div style={{ display: "flex", justifyContent: "flex-end", ...style }}>
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    borderRadius: '0.5rem',    // 8px
+                    overflow: "hidden",
+                    border: "0.0625rem solid #d9d9d9",  // 1px
+                    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+                    width: containerWidth,
+                }}
+            >
+                <Input
+                    value={keyword}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder={isMobile ? "搜索" : "搜索游记、账单..."}
+                    prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                    allowClear
+                    onClear={handleClear}
+                    variant="filled"
+                    style={{
+                        borderRadius: '0.5rem 0 0 0.5rem',  // 8px 0 0 8px
+                        border: "none",
+                        boxShadow: "none",
+                        flex: 1,
+                    }}
+                />
+                <Button
+                    type="primary"
+                    icon={<SearchOutlined />}
+                    loading={searching}
+                    disabled={!keyword.trim()}
+                    onClick={handleSearch}
+                    style={{
+                        borderRadius: '0 0.5rem 0.5rem 0',  // 0 8px 8px 0
+                        border: "none",
+                        height: '2rem',      // 32px
+                        padding: isMobile ? '0 0.625rem' : '0 1rem',  // 10px, 16px
+                        flexShrink: 0,
+                    }}
+                >
+                    {!isMobile && "搜索"}
+                </Button>
+            </div>
+        </div>
+    );
 };
 
 export default SearchBar;
