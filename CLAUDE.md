@@ -1,6 +1,6 @@
 ## 项目概述
 
-**NomadNotes（游迹）** 是一个极简旅行记录全栈应用，支持旅程管理、消费记账、游记编写及图片矢量化。
+**NomadNotes（游迹）** 是一个极简旅行记录全栈应用，支持旅程管理、消费记账、游记编写及图片压缩存储。
 用户为每次旅程管理 **账单** 与 **游记**，旅程结束后自动生成消费统计与时间线回顾。
 
 **多添加注释。**
@@ -53,7 +53,7 @@
 - `POST /api/auth/register`、`POST /api/auth/login`、`POST /api/auth/refresh`
 - `POST /api/trips`、`GET /api/trips`、`GET /api/trips/:id`、`PATCH /api/trips/:id`、`DELETE /api/trips/:id`
 - `POST /api/trips/:tripId/expenses` (multipart)、`GET /api/trips/:tripId/expenses`、`DELETE /api/expenses/:id`、`GET /api/trips/:tripId/expenses/stats`
-- `POST /api/trips/:tripId/notes` (multipart, 自动矢量化)、`GET /api/trips/:tripId/notes`、`DELETE /api/notes/:id`
+- `POST /api/trips/:tripId/notes` (multipart, 图片自动压缩)、`GET /api/trips/:tripId/notes`、`DELETE /api/notes/:id`
 - `POST /api/upload` (独立上传)
 
 **游记矢量化细节**：
@@ -81,7 +81,25 @@
 - 代码注释充分，说明意图、关键步骤，**禁止使用 Emoji**
 - 图标使用 **SVG** 格式（内联或组件化），界面文案禁用 Emoji
 - 数据库 **不设置外键约束**，数据一致性由应用层保证
+- 所有数据库操作必须使用 ORM
 - 对话记录：每次提问后需追加到 `conversation_log.md`
+
+## 代码风格与格式化（强制统一）
+
+- 项目必须配置 `ESLint` + `Prettier`，且提交前自动格式化（如 `husky` + `lint-staged`）。
+- 缩进使用 4 个空格，不使用 Tab。
+- 语句末尾必须加分号（避免 ASI 隐患）。
+
+## 组件化与文件组织
+
+- 单个组件文件不超过 300 行（不含样式），超过则拆分。
+- 通用组件放在 `src/components/`，页面级组件放在 `src/pages/`（或 `src/views/`）。
+- 组件文件夹采用 PascalCase 命名，内部文件统一使用 `index.tsx` 导出。
+
+## 状态管理与 API 调用
+
+- 所有 API 请求必须封装成独立函数（如 `api/user.ts`），并在调用处使用 `try-catch` 处理异常。
+- 请求/响应数据需用 TypeScript 定义 `interface` 或 `type`。
 
 ## 开发命令
 
@@ -91,7 +109,6 @@ cd client && npm install && npm run dev
 
 # 后端
 cd server && npm install
-npm install @realness.online/potrace
 # 配置 .env (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, JWT_SECRET, PORT)
 npm run dev   # nodemon src/app.js
 ```
