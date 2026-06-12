@@ -542,4 +542,13 @@
 	.dark-theme .profile-edit-card :deep(.el-divider__text) {
 		color: #888 !important;
 	}
+
+	/* 暗黑主题密码强度进度条 */
+	.dark-theme .password-strength-bar :deep(.el-progress-bar__outer) {
+		background-color: #2a2a2a !important;
+	}
+
+	.dark-theme .password-strength-text {
+		color: #bfbfbf !important;
+	}
 </style>

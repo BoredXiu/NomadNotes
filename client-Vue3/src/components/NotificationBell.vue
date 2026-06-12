@@ -370,27 +370,98 @@
 	}
 
 	/* 暗黑主题适配 */
-	:global(.dark-theme) .notification-item:hover {
-		background: #1a1a2e;
-	}
-
-	:global(.dark-theme) .notification-unread {
-		background: #111d2c;
-	}
-
-	:global(.dark-theme) .notification-unread:hover {
-		background: #1a2a3e;
-	}
-
-	:global(.dark-theme) .notification-detail-text {
-		background: #1a1a2e;
+	:global(.dark-theme) .notification-popover {
+		background-color: #1f1f1f;
 	}
 
 	:global(.dark-theme) .notification-header {
-		border-bottom-color: #333;
+		border-bottom-color: #303030;
+		color: #e8e8e8;
+	}
+
+	:global(.dark-theme) .notification-title {
+		color: #e8e8e8;
 	}
 
 	:global(.dark-theme) .notification-item {
 		border-bottom-color: #2a2a2a;
+		color: #bfbfbf;
+	}
+
+	:global(.dark-theme) .notification-item:hover {
+		background-color: #2a2a2a;
+	}
+
+	:global(.dark-theme) .notification-unread {
+		background-color: #111d2c;
+	}
+
+	:global(.dark-theme) .notification-unread:hover {
+		background-color: #1a2a3e;
+	}
+
+	:global(.dark-theme) .notification-item-title {
+		color: #e8e8e8;
+	}
+
+	:global(.dark-theme) .notification-item-content {
+		color: #bfbfbf;
+	}
+
+	:global(.dark-theme) .notification-item-time {
+		color: #595959;
+	}
+
+	:global(.dark-theme) .notification-detail-text {
+		background-color: #2a2a2a;
+		color: #e8e8e8;
+	}
+
+	:global(.dark-theme) .notification-detail-label {
+		color: #e8e8e8;
+	}
+
+	:global(.dark-theme) .notification-empty {
+		color: #595959 !important;
+	}
+
+	/* 暗黑主题下 popover 弹出层背景 */
+	:global(.dark-theme) .el-popover.el-popper {
+		background-color: #1f1f1f !important;
+		border-color: #3a3a3a !important;
+		color: #e8e8e8 !important;
+	}
+
+	/* 暗黑主题下通知详情对话框 */
+	:global(.dark-theme) .el-dialog {
+		background-color: #1f1f1f !important;
+		border-color: #303030 !important;
+	}
+
+	:global(.dark-theme) .el-dialog__title {
+		color: #e8e8e8 !important;
+	}
+
+	:global(.dark-theme) .el-dialog__body {
+		color: #e8e8e8 !important;
+	}
+
+	/* 暗黑主题下描述列表 */
+	:global(.dark-theme) .el-descriptions {
+		color: #e8e8e8 !important;
+	}
+
+	:global(.dark-theme) .el-descriptions__label {
+		color: #bfbfbf !important;
+		background-color: #2a2a2a !important;
+	}
+
+	:global(.dark-theme) .el-descriptions__content {
+		color: #e8e8e8 !important;
+		background-color: #1f1f1f !important;
+	}
+
+	:global(.dark-theme) .el-descriptions--border .el-descriptions__cell {
+		border-color: #303030 !important;
 	}
 </style>

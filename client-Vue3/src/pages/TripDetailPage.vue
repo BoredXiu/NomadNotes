@@ -1167,6 +1167,70 @@
 		color: #fff !important;
 	}
 
+	/* 暗黑主题编辑按钮（非 default 类型） */
+	.dark-theme :deep(.trip-detail-header-right .el-button:not(.el-button--default):not(.el-button--primary)) {
+		background-color: #2a2a2a !important;
+		border-color: #3a3a3a !important;
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme :deep(.trip-detail-header-right .el-button:not(.el-button--default):not(.el-button--primary):hover) {
+		background-color: #3a3a3a !important;
+		border-color: #505050 !important;
+		color: #fff !important;
+	}
+
+	/* 暗黑主题 Switch 开关 */
+	.dark-theme :deep(.el-switch) {
+		--el-switch-off-color: #4a4a4a;
+	}
+
+	/* 暗黑主题概览描述列表 - 完整覆盖所有单元格 */
+	.dark-theme :deep(.overview-descriptions.el-descriptions--border) {
+		background-color: #1f1f1f !important;
+	}
+
+	.dark-theme :deep(.overview-descriptions .el-descriptions__body) {
+		background-color: #1f1f1f !important;
+	}
+
+	.dark-theme :deep(.overview-descriptions .el-descriptions__table) {
+		background-color: #1f1f1f !important;
+	}
+
+	.dark-theme :deep(.overview-descriptions .el-descriptions__cell) {
+		background-color: #1f1f1f !important;
+		border-color: #303030 !important;
+		color: #e8e8e8 !important;
+	}
+
+	/* 暗黑主题统计卡片 */
+	.dark-theme :deep(.stat-card .el-card) {
+		background-color: #1f1f1f !important;
+		border-color: #303030 !important;
+	}
+
+	/* 暗黑主题账单/游记表格内 text 按钮 hover */
+	.dark-theme :deep(.el-table .el-button--text:hover) {
+		background-color: rgba(102, 126, 234, 0.1) !important;
+	}
+
+	.dark-theme :deep(.el-table .el-button--text.el-button--danger:hover) {
+		background-color: rgba(255, 120, 117, 0.1) !important;
+	}
+
+	/* 暗黑主题 Popconfirm 弹出层 */
+	.dark-theme :deep(.el-popconfirm) {
+		background-color: #2a2a2a !important;
+		border-color: #3a3a3a !important;
+		color: #e8e8e8 !important;
+	}
+
+	/* 暗黑主题标签页头部区域 */
+	.dark-theme .trip-detail-tab-header {
+		background-color: transparent;
+	}
+
 	/* 空状态容器 - 增加纵向空间 */
 	.expenses-empty-container {
 		min-height: 400px;

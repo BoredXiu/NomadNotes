@@ -340,6 +340,7 @@
 
 	.dark-theme .expense-form-page .el-button--text:hover {
 		color: #e8e8e8 !important;
+		background-color: rgba(255, 255, 255, 0.08) !important;
 	}
 
 	.dark-theme .expense-form-page :deep(.el-select .el-input__wrapper) {

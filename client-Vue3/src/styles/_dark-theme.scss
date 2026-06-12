@@ -146,10 +146,11 @@
 
   &--text {
     color: $dark-text-secondary !important;
+    background-color: transparent !important;
 
     &:hover {
       color: $dark-text-primary !important;
-      background-color: $dark-bg-input !important;
+      background-color: rgba(255, 255, 255, 0.08) !important;
     }
   }
 
@@ -668,4 +669,249 @@
   background-color: $dark-bg-input !important;
   border-color: $dark-bg-hover !important;
   color: $dark-text-primary !important;
+}
+
+// ---- Popover 弹出面板 ----
+.dark-theme .el-popover {
+  background-color: $dark-bg-card !important;
+  border-color: $dark-border !important;
+  color: $dark-text-primary !important;
+}
+
+.dark-theme .el-popover__title {
+  color: $dark-text-primary !important;
+}
+
+// ---- Badge 徽标 ----
+.dark-theme .el-badge__content {
+  --el-badge-bg-color: #ff4d4f;
+  border-color: $dark-bg-page !important;
+}
+
+// ---- Progress 进度条 ----
+.dark-theme .el-progress {
+  &__text {
+    color: $dark-text-secondary !important;
+  }
+
+  &-bar {
+    &__outer {
+      background-color: $dark-bg-input !important;
+    }
+
+    &__inner {
+      background-color: $primary-color !important;
+    }
+  }
+}
+
+// ---- Tooltip 提示 ----
+.dark-theme .el-tooltip__trigger:focus {
+    outline-color: $primary-color !important;
+}
+
+// ---- Message 消息提示（全局） ----
+.el-message {
+  &--success {
+    --el-message-bg-color: rgba(82, 196, 26, 0.1);
+    --el-message-border-color: rgba(82, 196, 26, 0.2);
+    --el-message-text-color: #52c41a;
+  }
+
+  &--warning {
+    --el-message-bg-color: rgba(250, 173, 20, 0.1);
+    --el-message-border-color: rgba(250, 173, 20, 0.2);
+    --el-message-text-color: #faad14;
+  }
+
+  &--error {
+    --el-message-bg-color: rgba(255, 77, 79, 0.1);
+    --el-message-border-color: rgba(255, 77, 79, 0.2);
+    --el-message-text-color: #ff4d4f;
+  }
+
+  &--info {
+    --el-message-bg-color: rgba(24, 144, 255, 0.1);
+    --el-message-border-color: rgba(24, 144, 255, 0.2);
+    --el-message-text-color: #1890ff;
+  }
+}
+
+// ---- Notification 通知（全局） ----
+.el-notification {
+  &--success {
+    --el-notification-bg-color: rgba(82, 196, 26, 0.08);
+    --el-notification-border-color: rgba(82, 196, 26, 0.15);
+  }
+
+  &--warning {
+    --el-notification-bg-color: rgba(250, 173, 20, 0.08);
+    --el-notification-border-color: rgba(250, 173, 20, 0.15);
+  }
+
+  &--error {
+    --el-notification-bg-color: rgba(255, 77, 79, 0.08);
+    --el-notification-border-color: rgba(255, 77, 79, 0.15);
+  }
+
+  &--info {
+    --el-notification-bg-color: rgba(24, 144, 255, 0.08);
+    --el-notification-border-color: rgba(24, 144, 255, 0.15);
+  }
+}
+
+// ---- Rate 评分 ----
+.dark-theme .el-rate {
+  &__icon {
+    color: $dark-bg-hover !important;
+  }
+
+  &__text {
+    color: $dark-text-secondary !important;
+  }
+}
+
+// ---- Slider 滑块 ----
+.dark-theme .el-slider {
+  &__runway {
+    background-color: $dark-bg-input !important;
+  }
+
+  &__bar {
+    background-color: $primary-color !important;
+  }
+
+  &__button {
+    border-color: $primary-color !important;
+  }
+}
+
+// ---- Tag 标签增强 ----
+.dark-theme .el-tag {
+  &--info {
+    --el-tag-bg-color: rgba(140, 140, 140, 0.2);
+    --el-tag-border-color: transparent;
+    --el-tag-text-color: #bfbfbf;
+  }
+
+  &--success {
+    --el-tag-bg-color: rgba(82, 196, 26, 0.15);
+    --el-tag-border-color: transparent;
+    --el-tag-text-color: #52c41a;
+  }
+
+  &--warning {
+    --el-tag-bg-color: rgba(250, 173, 20, 0.15);
+    --el-tag-border-color: transparent;
+    --el-tag-text-color: #faad14;
+  }
+
+  &--danger {
+    --el-tag-bg-color: rgba(255, 77, 79, 0.15);
+    --el-tag-border-color: transparent;
+    --el-tag-text-color: #ff4d4f;
+  }
+}
+
+// ---- Input Number 数字输入框 ----
+.dark-theme .el-input-number {
+  &__decrease,
+  &__increase {
+    background-color: $dark-bg-input !important;
+    color: $dark-text-secondary !important;
+    border-color: $dark-border !important;
+
+    &:hover {
+      color: $primary-color !important;
+    }
+  }
+}
+
+// ---- TimePicker 时间选择器 ----
+.dark-theme .el-time-panel {
+  background-color: $dark-bg-input !important;
+  border-color: $dark-border !important;
+
+  &__content {
+    color: $dark-text-primary !important;
+  }
+
+  &__footer {
+    border-color: $dark-border !important;
+  }
+}
+
+// ---- DatePicker 面板 ----
+.dark-theme .el-picker-panel {
+  background-color: $dark-bg-input !important;
+  border-color: $dark-border !important;
+  color: $dark-text-primary !important;
+}
+
+// ---- Step 步骤条 ----
+.dark-theme .el-steps {
+  color: $dark-text-secondary !important;
+}
+
+.dark-theme .el-step {
+  &__title {
+    color: $dark-text-secondary !important;
+  }
+
+  &__description {
+    color: $dark-text-tertiary !important;
+  }
+
+  &__head {
+    &.is-finish,
+    &.is-process {
+      color: $primary-color !important;
+    }
+  }
+}
+
+// ---- Timeline 时间线 ----
+.dark-theme .el-timeline-item {
+  &__tail {
+    border-left-color: $dark-border !important;
+  }
+
+  &__wrapper {
+    color: $dark-text-primary !important;
+  }
+
+  &__timestamp {
+    color: $dark-text-tertiary !important;
+  }
+}
+
+// ---- Tree 树形控件 ----
+.dark-theme .el-tree {
+  background-color: transparent !important;
+  color: $dark-text-primary !important;
+
+  &__node:hover {
+    background-color: $dark-bg-input !important;
+  }
+
+  &__content {
+    color: $dark-text-primary !important;
+  }
+}
+
+// ---- Pagination 分页增强 ----
+.dark-theme .el-pagination {
+  background-color: transparent !important;
+
+  button:disabled {
+    background-color: $dark-bg-card !important;
+  }
+
+  .btn-prev,
+  .btn-next {
+    background-color: $dark-bg-card !important;
+    &:hover {
+      color: $primary-color !important;
+    }
+  }
 }

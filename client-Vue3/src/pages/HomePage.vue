@@ -279,14 +279,17 @@
 
 	.dark-theme .trip-card-action-btn {
 		color: rgba(255, 255, 255, 0.45) !important;
+		background-color: transparent !important;
 	}
 
 	.dark-theme .trip-card-action-btn:hover {
 		color: #667eea !important;
+		background-color: rgba(102, 126, 234, 0.1) !important;
 	}
 
 	.dark-theme .trip-card-action-btn-delete:hover {
 		color: #ff7875 !important;
+		background-color: rgba(255, 120, 117, 0.1) !important;
 	}
 
 	.dark-theme .trip-card-action-divider {

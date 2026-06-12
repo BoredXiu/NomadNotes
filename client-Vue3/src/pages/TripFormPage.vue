@@ -418,6 +418,11 @@
 		color: #bfbfbf !important;
 	}
 
+	.dark-theme .trip-form-page .el-button--text:hover {
+		color: #e8e8e8 !important;
+		background-color: rgba(255, 255, 255, 0.08) !important;
+	}
+
 	.dark-theme .trip-form-cover-placeholder {
 		border-color: #3a3a3a !important;
 		background-color: #2a2a2a !important;
