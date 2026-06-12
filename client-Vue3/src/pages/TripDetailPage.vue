@@ -1154,7 +1154,33 @@
 		color: #667eea !important;
 	}
 
-	/* 暗黑主题头部右侧所有按钮（编辑、结束旅程等） */
+	/* 暗黑主题结束旅程按钮 */
+	.dark-theme :deep(.trip-detail-header-right .el-button--default) {
+		background-color: #2a2a2a !important;
+		border-color: #3a3a3a !important;
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme :deep(.trip-detail-header-right .el-button--default:hover) {
+		background-color: #3a3a3a !important;
+		border-color: #505050 !important;
+		color: #fff !important;
+	}
+
+	/* 暗黑主题编辑按钮（非 default 类型） */
+	.dark-theme :deep(.trip-detail-header-right .el-button:not(.el-button--default):not(.el-button--primary)) {
+		background-color: #2a2a2a !important;
+		border-color: #3a3a3a !important;
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme :deep(.trip-detail-header-right .el-button:not(.el-button--default):not(.el-button--primary):hover) {
+		background-color: #3a3a3a !important;
+		border-color: #505050 !important;
+		color: #fff !important;
+	}
+
+	/* 暗黑主题编辑按钮兜底 - 覆盖所有 header-right 内的按钮 */
 	.dark-theme :deep(.trip-detail-header-right .el-button) {
 		background-color: #2a2a2a !important;
 		border-color: #3a3a3a !important;
@@ -1165,6 +1191,18 @@
 		background-color: #3a3a3a !important;
 		border-color: #505050 !important;
 		color: #fff !important;
+	}
+
+	/* 暗黑主题 header-right 内 primary 按钮保持原色 */
+	.dark-theme :deep(.trip-detail-header-right .el-button--primary) {
+		background-color: #667eea !important;
+		border-color: #667eea !important;
+		color: #fff !important;
+	}
+
+	.dark-theme :deep(.trip-detail-header-right .el-button--primary:hover) {
+		background-color: #7b93f0 !important;
+		border-color: #7b93f0 !important;
 	}
 
 	/* 暗黑主题 Switch 开关 */
@@ -1197,26 +1235,13 @@
 		border-color: #303030 !important;
 	}
 
-	/* 暗黑主题账单/游记表格内 text 按钮 */
-	.dark-theme :deep(.el-table .el-button--text) {
-		color: #bfbfbf !important;
-		background-color: transparent !important;
-	}
-
+	/* 暗黑主题账单/游记表格内 text 按钮 hover */
 	.dark-theme :deep(.el-table .el-button--text:hover) {
-		color: #667eea !important;
 		background-color: rgba(102, 126, 234, 0.1) !important;
 	}
 
-	/* 暗黑主题表格内删除按钮（danger text 类型）*/
-	.dark-theme :deep(.el-table .el-button--text.el-button--danger) {
-		color: #ff7875 !important;
-		background-color: transparent !important;
-	}
-
 	.dark-theme :deep(.el-table .el-button--text.el-button--danger:hover) {
-		color: #ff4d4f !important;
-		background-color: rgba(255, 77, 79, 0.1) !important;
+		background-color: rgba(255, 120, 117, 0.1) !important;
 	}
 
 	/* 暗黑主题 Popconfirm 弹出层 */

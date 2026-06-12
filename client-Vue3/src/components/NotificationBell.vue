@@ -18,7 +18,7 @@
 			>
 				<el-button
 					class="icon-btn"
-					style="color: #fff; border: none; font-size: 1.125rem"
+					style="color: #fff; border: none; font-size: 1.125rem; background: transparent"
 				>
 					<BellIcon :size="20" />
 				</el-button>
@@ -272,19 +272,13 @@
 		align-items: center;
 	}
 
-	/* 铃铛图标按钮 - 强制透明背景 */
-	.icon-btn {
-		background-color: transparent !important;
-		border: none !important;
-		color: rgba(255, 255, 255, 0.85) !important;
-		padding: 0.5rem !important;
-		min-width: auto !important;
-		height: auto !important;
+	/* 铃铛按钮与导航栏背景色保持一致 */
+	.notification-badge :deep(.el-button) {
+		background: transparent !important;
 	}
 
-	.icon-btn:hover {
-		background-color: rgba(255, 255, 255, 0.1) !important;
-		color: rgba(255, 255, 255, 0.95) !important;
+	.notification-badge :deep(.el-button:hover) {
+		background: rgba(255, 255, 255, 0.1) !important;
 	}
 
 	.notification-popover {

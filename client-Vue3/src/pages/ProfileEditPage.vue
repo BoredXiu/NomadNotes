@@ -461,6 +461,19 @@
 		color: #fff !important;
 	}
 
+	/* 暗黑主题 el-upload 内部的按钮兜底 */
+	.dark-theme .profile-edit-page :deep(.el-upload .el-button) {
+		background-color: #2a2a2a !important;
+		border-color: #3a3a3a !important;
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .profile-edit-page :deep(.el-upload .el-button:hover) {
+		background-color: #3a3a3a !important;
+		border-color: #505050 !important;
+		color: #fff !important;
+	}
+
 	/* 暗黑主题输入框 */
 	.dark-theme .profile-edit-page :deep(.el-input__wrapper) {
 		background-color: #2a2a2a !important;
@@ -569,5 +582,43 @@
 	.dark-theme .profile-edit-page :deep(.el-input__count) {
 		color: #595959 !important;
 		background-color: transparent !important;
+	}
+
+	/* 暗黑主题字数统计底部区域 */
+	.dark-theme .profile-edit-page :deep(.el-textarea .el-input__count) {
+		color: #595959 !important;
+		background-color: transparent !important;
+		bottom: 0.3125rem !important;
+		right: 0.625rem !important;
+	}
+
+	/* 暗黑主题 Select 下拉面板 */
+	.dark-theme .profile-edit-page :deep(.el-select-dropdown) {
+		background-color: #2a2a2a !important;
+		border-color: #3a3a3a !important;
+	}
+
+	.dark-theme .profile-edit-page :deep(.el-select-dropdown__item) {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .profile-edit-page :deep(.el-select-dropdown__item:hover) {
+		background-color: #3a3a3a !important;
+	}
+
+	.dark-theme .profile-edit-page :deep(.el-select-dropdown__item.is-selected) {
+		color: #667eea !important;
+		background-color: #1f1f1f !important;
+	}
+
+	/* 暗黑主题 Cascader 下拉面板 */
+	.dark-theme .profile-edit-page :deep(.el-cascader__dropdown) {
+		background-color: #2a2a2a !important;
+		border-color: #3a3a3a !important;
+	}
+
+	.dark-theme .profile-edit-page :deep(.el-cascader-panel) {
+		background-color: #2a2a2a !important;
+		color: #e8e8e8 !important;
 	}
 </style>

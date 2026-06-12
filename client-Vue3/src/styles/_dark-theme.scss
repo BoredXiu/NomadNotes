@@ -142,6 +142,14 @@
     &:active {
       background-color: $dark-bg-card !important;
     }
+
+    &.is-disabled,
+    &:disabled {
+      background-color: $dark-bg-card !important;
+      border-color: $dark-border !important;
+      color: $dark-text-tertiary !important;
+      opacity: 0.5;
+    }
   }
 
   &--text {
@@ -152,16 +160,11 @@
       color: $dark-text-primary !important;
       background-color: rgba(255, 255, 255, 0.08) !important;
     }
-  }
 
-  /* text 类型 + danger 变体：透明背景+红色文字，非实心红块 */
-  &--text.el-button--danger {
-    color: #ff7875 !important;
-    background-color: transparent !important;
-
-    &:hover {
-      color: #ff4d4f !important;
-      background-color: rgba(255, 77, 79, 0.1) !important;
+    &.is-disabled,
+    &:disabled {
+      color: $dark-text-tertiary !important;
+      background-color: transparent !important;
     }
   }
 
@@ -173,6 +176,13 @@
       background-color: $primary-hover !important;
       border-color: $primary-hover !important;
     }
+
+    &.is-disabled,
+    &:disabled {
+      background-color: rgba(102, 126, 234, 0.4) !important;
+      border-color: rgba(102, 126, 234, 0.2) !important;
+      opacity: 0.5;
+    }
   }
 
   &--danger {
@@ -182,6 +192,19 @@
     &:hover {
       background-color: $danger-hover !important;
       border-color: $danger-hover !important;
+    }
+  }
+
+  // 修复 text 类型 + danger 组合：保持透明背景，仅图标/文字为红色
+  &.is-text,
+  &--text {
+    &.el-button--danger {
+      background-color: transparent !important;
+      border-color: transparent !important;
+
+      &:hover {
+        background-color: rgba(255, 120, 117, 0.1) !important;
+      }
     }
   }
 
@@ -200,6 +223,19 @@
   &__title,
   &__action {
     color: $dark-text-primary !important;
+  }
+
+  // popconfirm 内的取消按钮
+  .el-button--default {
+    background-color: $dark-bg-card !important;
+    border-color: $dark-bg-hover !important;
+    color: $dark-text-primary !important;
+
+    &:hover {
+      background-color: $dark-bg-hover !important;
+      border-color: $dark-border-hover !important;
+      color: #fff !important;
+    }
   }
 }
 
@@ -330,6 +366,18 @@
   &__inner {
     color: $dark-text-primary !important;
   }
+
+  &.is-disabled {
+    .el-input__wrapper {
+      background-color: $dark-bg-card !important;
+      box-shadow: 0 0 0 1px $dark-border inset !important;
+      opacity: 0.5;
+    }
+
+    .el-input__inner {
+      color: $dark-text-tertiary !important;
+    }
+  }
 }
 
 // ---- Textarea ----
@@ -345,12 +393,13 @@
   &:focus {
     border-color: $primary-color !important;
   }
-}
 
-/* 暗黑主题字数统计 */
-.dark-theme .el-input__count {
-  color: #595959 !important;
-  background-color: transparent !important;
+  &:disabled {
+    background-color: $dark-bg-card !important;
+    border-color: $dark-border !important;
+    color: $dark-text-tertiary !important;
+    opacity: 0.5;
+  }
 }
 
 // ---- Select Input ----
@@ -488,6 +537,26 @@
 
   &__tip {
     color: $dark-text-secondary !important;
+  }
+
+  &-list {
+    &__item {
+      background-color: $dark-bg-card !important;
+      border-color: $dark-border !important;
+      color: $dark-text-primary !important;
+
+      &:hover {
+        background-color: $dark-bg-input !important;
+      }
+    }
+
+    &__item-name {
+      color: $dark-text-primary !important;
+    }
+
+    &__item-status-label {
+      color: $dark-text-secondary !important;
+    }
   }
 }
 
@@ -697,6 +766,17 @@
 
 .dark-theme .el-popover__title {
   color: $dark-text-primary !important;
+}
+
+// ---- Overlay 遮罩层 ----
+.dark-theme .el-overlay {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+// ---- Popper 箭头 ----
+.dark-theme .el-popper__arrow::before {
+  background-color: $dark-bg-card !important;
+  border-color: $dark-border !important;
 }
 
 // ---- Badge 徽标 ----
@@ -930,50 +1010,5 @@
     &:hover {
       color: $primary-color !important;
     }
-  }
-}
-
-// ---- 表单校验错误提示 ----
-.dark-theme .el-form-item__error {
-  color: #ff4d4f !important;
-}
-
-// ---- Upload 上传列表 ----
-.dark-theme .el-upload-list {
-  &__item {
-    background-color: $dark-bg-input !important;
-    border-color: $dark-border !important;
-    color: $dark-text-primary !important;
-
-    &:hover {
-      background-color: $dark-bg-hover !important;
-    }
-  }
-}
-
-// ---- Dropdown 下拉菜单 ----
-.dark-theme .el-dropdown-menu {
-  background-color: $dark-bg-input !important;
-  border-color: $dark-border !important;
-
-  &__item {
-    color: $dark-text-primary !important;
-
-    &:hover,
-    &.is-hovering {
-      background-color: $dark-bg-hover !important;
-      color: #fff !important;
-    }
-  }
-}
-
-// ---- 全局图标按钮（导航栏等）----
-.dark-theme .icon-btn {
-  background-color: transparent !important;
-  border: none !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
   }
 }
