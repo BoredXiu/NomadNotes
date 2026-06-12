@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getAccessToken, getRefreshToken, getCurrentUserId, setAccessToken, setRefreshToken, logoutCurrentUser } from "../utils/storage";
 
 // API 基础地址：优先使用环境变量，未配置时默认使用 /api（走 Vite 开发代理）
 const api = axios.create({
@@ -9,16 +10,29 @@ const api = axios.create({
 	},
 });
 
-// 使用 sessionStorage 而非 localStorage 实现同浏览器多账号隔离
-// sessionStorage 每个标签页独立，避免不同标签页登录不同账号时 token 互相覆盖
+/**
+ * 请求拦截器：自动附加当前用户的 Authorization header
+ *
+ * 多用户 localStorage 方案：
+ * - 通过 getCurrentUserId() 确定当前活跃用户
+ * - 从 nn_accessToken_{uid} 读取对应 token
+ * - 不同用户登录时 token 存储在各自 key 下，互不覆盖
+ */
 api.interceptors.request.use((config) => {
-	const token = sessionStorage.getItem("accessToken");
+	const token = getAccessToken();
 	if (token) {
 		config.headers.Authorization = `Bearer ${token}`;
 	}
 	return config;
 });
 
+/**
+ * 响应拦截器：统一处理 401 刷新、403 账号禁用
+ *
+ * 多用户 localStorage 方案：
+ * - 刷新 token 后写入当前用户的 key（nn_accessToken_{uid}）
+ * - 登出时只清除当前用户数据，不影响其他用户
+ */
 api.interceptors.response.use(
 	(response) => response,
 	async (error) => {
@@ -29,9 +43,7 @@ api.interceptors.response.use(
 		if (error.response?.status === 403) {
 			const message = error.response?.data?.message || "";
 			if (message.includes("已被管理员禁用")) {
-				sessionStorage.removeItem("accessToken");
-				sessionStorage.removeItem("refreshToken");
-				sessionStorage.removeItem("user");
+				logoutCurrentUser();
 				// 通过 URL 参数传递禁用提示，避免刷新后丢失
 				window.location.href = "/login?disabled=1";
 				return Promise.reject(error);
@@ -41,7 +53,7 @@ api.interceptors.response.use(
 		if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== "/auth/refresh") {
 			originalRequest._retry = true;
 			try {
-				const refreshToken = sessionStorage.getItem("refreshToken");
+				const refreshToken = getRefreshToken();
 				if (!refreshToken) {
 					throw new Error("No refresh token");
 				}
@@ -50,15 +62,17 @@ api.interceptors.response.use(
 
 				if (data.success) {
 					const { accessToken, refreshToken: newRefreshToken } = data.data;
-					sessionStorage.setItem("accessToken", accessToken);
-					sessionStorage.setItem("refreshToken", newRefreshToken);
+					// 获取当前活跃用户 ID 后写入对应 key
+					const uid = getCurrentUserId();
+					if (uid) {
+						setAccessToken(uid, accessToken);
+						setRefreshToken(uid, newRefreshToken);
+					}
 					originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 					return api(originalRequest);
 				}
 			} catch (refreshError) {
-				sessionStorage.removeItem("accessToken");
-				sessionStorage.removeItem("refreshToken");
-				sessionStorage.removeItem("user");
+				logoutCurrentUser();
 				window.location.href = "/login";
 				return Promise.reject(refreshError);
 			}

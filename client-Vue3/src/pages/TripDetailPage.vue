@@ -270,6 +270,7 @@
 				>
 					<template #default="{ row }">
 						<div
+							class="note-content-cell"
 							style="white-space: pre-wrap; text-align: center"
 							v-html="row.content"
 						/>
@@ -828,6 +829,12 @@
 	async function handleTogglePublic(val: string | number | boolean) {
 		if (!trip.value) return;
 		const checked = val === true;
+		// 前端校验：公开旅程需要至少有一条账单或一篇游记
+		if (checked && expenseCount.value === 0 && noteCount.value === 0) {
+			ElMessage.warning("请先添加账单或游记后再申请公开");
+			isPublic.value = false;
+			return;
+		}
 		try {
 			if (checked) {
 				// 提交公开审核申请（不再直接设为公开）
@@ -1080,6 +1087,21 @@
 
 	.dark-theme .expense-amount {
 		color: #ff7875 !important;
+	}
+
+	/* 暗黑主题游记文本单元格 - 确保 v-html 内容可见 */
+	.dark-theme :deep(.note-content-cell) {
+		color: #e8e8e8 !important;
+	}
+
+	/* 暗黑主题游记文本单元格内的所有子元素继承颜色 */
+	.dark-theme :deep(.note-content-cell *) {
+		color: #e8e8e8 !important;
+	}
+
+	/* 暗黑主题表格单元默认文本 */
+	.dark-theme :deep(.el-table__cell) {
+		color: #e8e8e8 !important;
 	}
 
 	.dark-theme .trip-detail-breadcrumb :deep(.el-breadcrumb__inner) {

@@ -26,4 +26,17 @@ async function updateProfile(req, res, next) {
   }
 }
 
-export { getProfile, updateProfile };
+async function changePassword(req, res, next) {
+  try {
+    const result = await profileService.changePassword(req.userId, req.body);
+    res.json({
+      success: true,
+      data: result,
+      message: '密码修改成功',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export { getProfile, updateProfile, changePassword };

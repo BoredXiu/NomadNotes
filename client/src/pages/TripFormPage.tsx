@@ -9,7 +9,6 @@ import {
   Card,
   Upload,
   Space,
-  Switch,
   Image,
 } from 'antd';
 import { PlusOutlined, ArrowLeftOutlined, AimOutlined, ImportOutlined } from '@ant-design/icons';
@@ -74,7 +73,6 @@ export default function TripFormPage() {
           destination: trip.destination,
           startDate: dayjs(trip.startDate),
           endDate: dayjs(trip.endDate),
-          isPublic: trip.isPublic === 1,
         });
         setExistingCoverImage(trip.coverImage || null);
       }).catch(() => {
@@ -146,7 +144,6 @@ export default function TripFormPage() {
       if (data.destination) fields.destination = data.destination;
       if (data.startDate) fields.startDate = dayjs(data.startDate);
       if (data.endDate) fields.endDate = dayjs(data.endDate);
-      if (data.isPublic !== undefined) fields.isPublic = data.isPublic === 1;
       form.setFieldsValue(fields);
 
       message.success("游记数据导入成功");
@@ -228,7 +225,6 @@ export default function TripFormPage() {
     destination: string;
     startDate: dayjs.Dayjs;
     endDate: dayjs.Dayjs;
-    isPublic: boolean;
   }) => {
     setLoading(true);
     try {
@@ -245,7 +241,6 @@ export default function TripFormPage() {
         startDate: values.startDate.format('YYYY-MM-DD HH:mm:ss'),
         endDate: values.endDate.format('YYYY-MM-DD HH:mm:ss'),
         coverImage,
-        isPublic: values.isPublic ? 1 : 0,
       };
 
       if (isEditing && id) {
@@ -282,7 +277,7 @@ export default function TripFormPage() {
         form={form}
         layout="vertical"
         onFinish={onFinish}
-        initialValues={{ isPublic: false }}
+        initialValues={{}}
         autoComplete="off"
       >
         <Form.Item
@@ -347,10 +342,6 @@ export default function TripFormPage() {
             format="YYYY-MM-DD HH:mm:ss"
             style={{ width: '100%' }}
           />
-        </Form.Item>
-
-        <Form.Item name="isPublic" label="公开旅程" valuePropName="checked">
-          <Switch />
         </Form.Item>
 
         {displayImage ? (

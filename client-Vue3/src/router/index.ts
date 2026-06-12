@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { getAccessToken, getStoredUser } from "../utils/storage";
 
 const router = createRouter({
 	history: createWebHistory(),
@@ -104,25 +105,26 @@ const router = createRouter({
 	],
 });
 
-// 路由守卫
+/**
+ * 路由守卫
+ *
+ * 多用户 localStorage 方案：
+ * - 通过 getAccessToken() 读取当前活跃用户的 token
+ * - getAccessToken 内部先查 nn_currentUserId，再查 nn_accessToken_{uid}
+ * - 管理员权限校验同样从多 key 方案读取用户信息
+ */
 router.beforeEach((to, _from, next) => {
-	// 使用 sessionStorage（每个标签页独立）避免多账号 token 冲突
-	const token = sessionStorage.getItem("accessToken");
+	// 使用多用户 localStorage 方案读取当前活跃用户的 token
+	const token = getAccessToken();
 
 	if (to.meta.requiresAuth && !token) {
 		next("/login");
 	} else if (to.meta.guest && token) {
 		next("/");
 	} else if (to.meta.requiresAdmin) {
-		// 管理员权限校验：从 sessionStorage 读取用户角色
-		try {
-			const userStr = sessionStorage.getItem("user");
-			const user = userStr ? JSON.parse(userStr) : null;
-			if (!user || user.role !== "admin") {
-				next("/");
-				return;
-			}
-		} catch {
+		// 管理员权限校验：从多用户 localStorage 读取当前用户角色
+		const user = getStoredUser();
+		if (!user || user.role !== "admin") {
 			next("/");
 			return;
 		}

@@ -8,5 +8,6 @@ router.use(auth);
 
 router.get('/', profileController.getProfile);
 router.patch('/', profileController.updateProfile);
+router.patch('/password', profileController.changePassword);
 
 export default router;

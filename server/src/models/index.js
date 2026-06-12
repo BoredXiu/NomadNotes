@@ -4,6 +4,7 @@ import Expense from "./Expense.js";
 import Note from "./Note.js";
 import AuditLog from "./AuditLog.js";
 import AdminOperationLog from "./AdminOperationLog.js";
+import Notification from "./Notification.js";
 
 User.hasMany(Trip, { foreignKey: "userId", constraints: false });
 Trip.belongsTo(User, { foreignKey: "userId", constraints: false });

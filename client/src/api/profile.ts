@@ -16,3 +16,12 @@ export async function updateProfile(data: {
   const res = await api.patch<ApiResponse<User>>('/profile', data);
   return res.data.data;
 }
+
+/** 修改密码 */
+export async function changePassword(data: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<{ message: string }> {
+  const res = await api.patch<ApiResponse<{ message: string }>>('/profile/password', data);
+  return res.data.data;
+}

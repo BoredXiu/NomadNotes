@@ -11,11 +11,21 @@ import {
   Typography,
   Avatar,
   Cascader,
+  Divider,
+  Progress,
+  Collapse,
 } from 'antd';
-import { UserOutlined, UploadOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import {
+  UserOutlined,
+  UploadOutlined,
+  ArrowLeftOutlined,
+  EyeInvisibleOutlined,
+  EyeTwoTone,
+  KeyOutlined,
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { getProfile, updateProfile } from '../api/profile';
+import { getProfile, updateProfile, changePassword } from '../api/profile';
 import { uploadImage } from '../api/upload';
 import areaData from 'china-area-data';
 
@@ -44,9 +54,12 @@ function buildAreaOptions(parentCode = '86'): CascaderOption[] {
 
 export default function ProfileEditPage() {
   const [form] = Form.useForm();
+  const [passwordForm] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [passwordStrength, setPasswordStrength] = useState(0);
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
 
@@ -106,6 +119,54 @@ export default function ProfileEditPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  /** 计算密码强度等级（0-100） */
+  const calcPasswordStrength = (pwd: string): number => {
+    let score = 0;
+    if (pwd.length >= 6) score += 20;
+    if (pwd.length >= 10) score += 20;
+    if (/[a-z]/.test(pwd)) score += 15;
+    if (/[A-Z]/.test(pwd)) score += 15;
+    if (/\d/.test(pwd)) score += 15;
+    if (/[^a-zA-Z0-9]/.test(pwd)) score += 15;
+    return Math.min(score, 100);
+  };
+
+  /** 检测新密码变化时更新强度 */
+  const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswordStrength(calcPasswordStrength(e.target.value));
+  };
+
+  /** 修改密码 */
+  const handleChangePassword = async () => {
+    try {
+      const values = await passwordForm.validateFields();
+      setPasswordSaving(true);
+      await changePassword({
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+      });
+      message.success('密码修改成功');
+      passwordForm.resetFields();
+      setPasswordStrength(0);
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        message.error(error.response.data.message);
+      }
+      // Ant Design 表单校验失败时，error 为 void，无需额外提示
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  /** 密码强度文案与颜色 */
+  const getStrengthInfo = (score: number) => {
+    if (score === 0) return { text: '', color: '', percent: 0 };
+    if (score < 40) return { text: '弱', color: '#ff4d4f', percent: 25 };
+    if (score < 60) return { text: '中', color: '#faad14', percent: 50 };
+    if (score < 80) return { text: '强', color: '#52c41a', percent: 75 };
+    return { text: '非常强', color: '#52c41a', percent: 100 };
   };
 
   if (loading) {
@@ -202,6 +263,125 @@ export default function ProfileEditPage() {
               <Select.Option value="other">其他</Select.Option>
             </Select>
           </Form.Item>
+
+          {/* 分隔线 */}
+          <Divider style={{ fontSize: '0.875rem', color: '#888' }}>密码修改</Divider>
+
+          {/* 折叠面板：密码修改区域 */}
+          <Collapse
+            ghost
+            expandIconPosition="end"
+            items={[
+              {
+                key: 'password',
+                label: (
+                  <span style={{ color: '#666', fontSize: '0.875rem' }}>
+                    <KeyOutlined style={{ marginRight: 8 }} />
+                    修改密码
+                  </span>
+                ),
+                children: (
+                  <Form
+                    form={passwordForm}
+                    layout="vertical"
+                    name="passwordForm"
+                  >
+                    <Form.Item
+                      name="currentPassword"
+                      label="当前密码"
+                      rules={[
+                        { required: true, message: '请输入当前密码' },
+                      ]}
+                    >
+                      <Input.Password
+                        placeholder="请输入当前密码"
+                        iconRender={(visible) =>
+                          visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                        }
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="newPassword"
+                      label="新密码"
+                      rules={[
+                        { required: true, message: '请输入新密码' },
+                        { min: 6, message: '密码长度至少 6 位' },
+                        {
+                          pattern: /^(?=.*[a-zA-Z])(?=.*\d)/,
+                          message: '密码必须包含字母和数字',
+                        },
+                      ]}
+                    >
+                      <Input.Password
+                        placeholder="请输入新密码（至少 6 位，包含字母和数字）"
+                        onChange={handleNewPasswordChange}
+                        iconRender={(visible) =>
+                          visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                        }
+                      />
+                    </Form.Item>
+
+                    {/* 密码强度指示条 */}
+                    {passwordStrength > 0 && (
+                      <div style={{ marginTop: '-0.75rem', marginBottom: '1.25rem' }}>
+                        <Progress
+                          percent={getStrengthInfo(passwordStrength).percent}
+                          strokeColor={getStrengthInfo(passwordStrength).color}
+                          showInfo={false}
+                          size="small"
+                        />
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            color: getStrengthInfo(passwordStrength).color,
+                          }}
+                        >
+                          密码强度：{getStrengthInfo(passwordStrength).text}
+                        </span>
+                      </div>
+                    )}
+
+                    <Form.Item
+                      name="confirmPassword"
+                      label="确认新密码"
+                      dependencies={['newPassword']}
+                      rules={[
+                        { required: true, message: '请再次输入新密码' },
+                        ({ getFieldValue }) => ({
+                          validator(_, value) {
+                            if (!value || getFieldValue('newPassword') === value) {
+                              return Promise.resolve();
+                            }
+                            return Promise.reject(new Error('两次输入的密码不一致'));
+                          },
+                        }),
+                      ]}
+                    >
+                      <Input.Password
+                        placeholder="请再次输入新密码"
+                        iconRender={(visible) =>
+                          visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                        }
+                      />
+                    </Form.Item>
+
+                    <Form.Item>
+                      <Button
+                        type="primary"
+                        ghost
+                        onClick={handleChangePassword}
+                        loading={passwordSaving}
+                        block
+                      >
+                        保存修改
+                      </Button>
+                    </Form.Item>
+                  </Form>
+                ),
+              },
+            ]}
+          />
 
           <Form.Item>
             <Button

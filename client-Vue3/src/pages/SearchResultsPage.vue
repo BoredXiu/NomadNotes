@@ -21,6 +21,7 @@
 					v-model="scope"
 					size="small"
 					class="search-results-filter-select"
+					:teleported="false"
 					@change="handleScopeChange"
 				>
 					<el-option
@@ -35,6 +36,7 @@
 					v-model="sortBy"
 					size="small"
 					class="search-results-filter-select-sort"
+					:teleported="false"
 					@change="handleSortChange"
 				>
 					<el-option

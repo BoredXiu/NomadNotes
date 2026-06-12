@@ -12,6 +12,9 @@ dist-ssr/
 unpackage/
 www/
 
+# Vite PWA dev cache (PWA 开发缓存)
+dev-dist/
+
 # local env files (本地环境变量)
 .env
 

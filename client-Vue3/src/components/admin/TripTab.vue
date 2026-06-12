@@ -9,6 +9,7 @@
 					placeholder="公开状态"
 					clearable
 					style="width: 120px"
+					:teleported="false"
 					@change="handleFilterChange"
 				>
 					<el-option
@@ -190,9 +191,7 @@
 		takedownId.value = item.id;
 		// 乐观更新：立即切换 UI 状态，提升响应速度
 		const newStatus = item.isPublic === 1 ? 0 : 1;
-		list.value = list.value.map((t) =>
-			t.id === item.id ? { ...t, isPublic: newStatus } : t,
-		);
+		list.value = list.value.map((t) => (t.id === item.id ? { ...t, isPublic: newStatus } : t));
 		try {
 			const res = await takedownTrip(item.id);
 			if (res.success) {
@@ -202,9 +201,7 @@
 			fetchTripList();
 		} catch {
 			// 失败时恢复原始状态
-			list.value = list.value.map((t) =>
-				t.id === item.id ? { ...t, isPublic: item.isPublic } : t,
-			);
+			list.value = list.value.map((t) => (t.id === item.id ? { ...t, isPublic: item.isPublic } : t));
 			ElMessage.error("操作失败");
 		} finally {
 			takedownId.value = null;
@@ -351,5 +348,35 @@
 			justify-content: center;
 			margin-top: 24px;
 		}
+	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .trip-tab .tab-header h3 {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .trip-tab .loading-state {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .trip-tab .trip-card {
+		background-color: #1f1f1f !important;
+		border-color: #303030 !important;
+	}
+
+	.dark-theme .trip-tab .trip-info .trip-title {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .trip-tab .trip-info .trip-destination {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .trip-tab .user-info {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .trip-tab .trip-date {
+		color: #bfbfbf !important;
 	}
 </style>

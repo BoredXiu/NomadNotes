@@ -203,6 +203,11 @@ export default function TripDetailPage() {
 
   const handleTogglePublic = async (checked: boolean) => {
     if (!trip) return;
+    // 前端校验：公开旅程需要至少有一条账单或一篇游记
+    if (checked && (trip.expenseCount || 0) === 0 && (trip.noteCount || 0) === 0) {
+      message.warning("请先添加账单或游记后再申请公开");
+      return;
+    }
     // 保存切换前的状态，用于失败回滚
     const prevIsPublic = trip.isPublic;
     try {

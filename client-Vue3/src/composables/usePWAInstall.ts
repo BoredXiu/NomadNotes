@@ -100,12 +100,12 @@ async function diagnosePWA(): Promise<string[]> {
 	// 检查图标文件是否可访问
 	for (const iconSize of ["192", "512"]) {
 		try {
-			const res = await fetch("/icons/icon-" + iconSize + "x" + iconSize + ".png", { method: "HEAD" });
+			const res = await fetch("/icons/icon-" + iconSize + "x" + iconSize + ".svg", { method: "HEAD" });
 			if (!res.ok) {
-				issues.push("图标文件 /icons/icon-" + iconSize + "x" + iconSize + ".png 不可访问。");
+				issues.push("图标文件 /icons/icon-" + iconSize + "x" + iconSize + ".svg 不可访问。");
 			}
 		} catch {
-			issues.push("图标文件 /icons/icon-" + iconSize + "x" + iconSize + ".png 无法获取。");
+			issues.push("图标文件 /icons/icon-" + iconSize + "x" + iconSize + ".svg 无法获取。");
 		}
 	}
 

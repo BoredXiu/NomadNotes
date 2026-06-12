@@ -71,6 +71,7 @@
 					</el-icon>
 				</el-button>
 
+				<NotificationBell />
 				<el-button
 					v-if="canInstall"
 					class="icon-btn install-btn"
@@ -143,6 +144,7 @@
 	import SkateboardTabBar from "./SkateboardTabBar.vue";
 	import SearchBar from "./SearchBar.vue";
 	import AppFooter from "./AppFooter.vue";
+	import NotificationBell from "./NotificationBell.vue";
 
 	const authStore = useAuthStore();
 	const { user, isAdmin } = storeToRefs(authStore);

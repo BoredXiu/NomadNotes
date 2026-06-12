@@ -64,3 +64,28 @@
 		loadRates();
 	});
 </script>
+
+<style scoped lang="scss">
+	/* 暗黑主题货币切换选择器适配 */
+	:deep(.dark-theme .el-select .el-input__wrapper) {
+		background-color: #2a2a2a !important;
+		box-shadow: 0 0 0 1px #3a3a3a inset !important;
+	}
+
+	:deep(.dark-theme .el-select .el-input__inner) {
+		color: #e8e8e8 !important;
+	}
+
+	:deep(.dark-theme .el-select-dropdown__item) {
+		color: #e8e8e8 !important;
+	}
+
+	:deep(.dark-theme .el-select-dropdown__item:hover) {
+		background-color: #3a3a3a !important;
+	}
+
+	:deep(.dark-theme .el-select-dropdown__item.is-selected) {
+		color: #667eea !important;
+		background-color: #1f1f1f !important;
+	}
+</style>

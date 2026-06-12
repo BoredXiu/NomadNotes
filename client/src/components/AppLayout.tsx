@@ -17,6 +17,7 @@ import { useThemeRipple } from '../hooks/useThemeRipple';
 import { getPendingCount } from '../api/admin';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { NomadLogoIcon, MyTripIcon } from './NomadIcons';
+import NotificationBell from './NotificationBell';
 import SkateboardTabBar from './SkateboardTabBar';
 import SearchBar from './SearchBar';
 import AppFooter from './AppFooter';
@@ -144,6 +145,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             )}
             <Text style={{ color: '#fff' }}>{user?.username}</Text>
           </Space>
+          <NotificationBell />
           <Button
             type="text"
             icon={mode === 'dark' ? <SunOutlined /> : <MoonOutlined />}

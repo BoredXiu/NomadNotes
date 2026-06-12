@@ -94,10 +94,6 @@
 					/>
 				</el-form-item>
 
-				<el-form-item label="公开旅程">
-					<el-switch v-model="formData.isPublicBoolean" />
-				</el-form-item>
-
 				<!-- 封面图片 -->
 				<el-form-item
 					v-if="coverPreview"
@@ -183,8 +179,6 @@
 		destination: "",
 		startDate: "",
 		endDate: "",
-		isPublic: 0,
-		isPublicBoolean: false,
 	});
 
 	const rules: FormRules = {
@@ -319,7 +313,6 @@
 			if (data.destination) formData.destination = data.destination;
 			if (data.startDate) formData.startDate = data.startDate;
 			if (data.endDate) formData.endDate = data.endDate;
-			if (data.isPublic !== undefined) formData.isPublicBoolean = data.isPublic === 1;
 
 			ElMessage.success("游记数据导入成功");
 		} catch {
@@ -350,7 +343,6 @@
 				destination: formData.destination,
 				startDate: formData.startDate,
 				endDate: formData.endDate || "",
-				isPublic: formData.isPublicBoolean ? 1 : 0,
 				coverImage,
 			};
 
@@ -378,7 +370,6 @@
 				formData.destination = trip.destination;
 				formData.startDate = trip.startDate;
 				formData.endDate = trip.endDate || "";
-				formData.isPublicBoolean = trip.isPublic === 1;
 				coverPreview.value = trip.coverImage || null;
 				uploadedCoverUrl.value = trip.coverImage || null;
 			} catch {
@@ -438,5 +429,39 @@
 
 	.dark-theme .trip-form-cover-text {
 		color: #8c8c8c !important;
+	}
+
+	/* 暗黑主题输入框适配 */
+	.dark-theme .trip-form-page :deep(.el-input__wrapper) {
+		background-color: #2a2a2a !important;
+		box-shadow: 0 0 0 1px #3a3a3a inset !important;
+	}
+
+	.dark-theme .trip-form-page :deep(.el-input__inner) {
+		color: #e8e8e8 !important;
+	}
+
+	/* 暗黑主题文本框 */
+	.dark-theme .trip-form-page :deep(.el-textarea__inner) {
+		background-color: #2a2a2a !important;
+		color: #e8e8e8 !important;
+		border-color: #3a3a3a !important;
+	}
+
+	/* 暗黑主题日期选择器 */
+	.dark-theme .trip-form-page :deep(.el-date-editor .el-input__wrapper) {
+		background-color: #2a2a2a !important;
+		box-shadow: 0 0 0 1px #3a3a3a inset !important;
+	}
+
+	/* 暗黑主题表单标签 */
+	.dark-theme .trip-form-page :deep(.el-form-item__label) {
+		color: #bfbfbf !important;
+	}
+
+	/* 暗黑主题上传组件 */
+	.dark-theme .trip-form-page :deep(.el-upload-dragger) {
+		background-color: #1f1f1f !important;
+		border-color: #303030 !important;
 	}
 </style>

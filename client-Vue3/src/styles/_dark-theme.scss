@@ -614,3 +614,58 @@
     color: $dark-text-primary !important;
   }
 }
+
+// ---- Table cell text (确保表格单元文本在暗黑模式下可见) ----
+.dark-theme .el-table__cell {
+  color: $dark-text-primary !important;
+}
+
+// ---- Teleported select dropdown (处理 teleport 到 body 的下拉) ----
+.el-select-dropdown.dark-select-popper {
+  background-color: $dark-bg-input !important;
+  border-color: $dark-bg-hover !important;
+
+  .el-select-dropdown__item {
+    color: $dark-text-primary !important;
+
+    &:hover,
+    &.is-hovering {
+      background-color: $dark-bg-hover !important;
+    }
+
+    &.is-selected {
+      color: $primary-color !important;
+      background-color: $dark-bg-card !important;
+    }
+  }
+}
+
+// ---- Teleported cascader dropdown ----
+.el-cascader__dropdown.dark-cascader-popper {
+  background-color: $dark-bg-input !important;
+  border-color: $dark-bg-hover !important;
+
+  .el-cascader-node__label {
+    color: $dark-text-primary !important;
+  }
+
+  .el-cascader-node:not(.is-disabled):hover {
+    background-color: $dark-bg-hover !important;
+  }
+
+  .el-cascader-menu {
+    border-right-color: $dark-border !important;
+  }
+}
+
+// ---- Select 占位符文本 ----
+.dark-theme .el-input__inner::placeholder {
+  color: $dark-text-tertiary !important;
+}
+
+// ---- el-popper (light) 通用下拉 ----
+.el-popper.is-light.dark-popper {
+  background-color: $dark-bg-input !important;
+  border-color: $dark-bg-hover !important;
+  color: $dark-text-primary !important;
+}

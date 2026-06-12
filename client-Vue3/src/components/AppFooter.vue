@@ -55,4 +55,17 @@
 			font-size: 11px;
 		}
 	}
+
+	/* 暗黑主题适配 */
+	.dark-theme .app-footer {
+		color: #595959 !important;
+	}
+
+	.dark-theme .app-footer__link {
+		color: #595959 !important;
+	}
+
+	.dark-theme .app-footer__link:hover {
+		color: #667eea !important;
+	}
 </style>

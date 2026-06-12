@@ -126,11 +126,6 @@ export default function NoteFormPage() {
         message.success('游记更新成功');
         navigate(`/trip/${resolvedTripId}?tab=notes`);
       } else {
-        if (tempFiles.length === 0) {
-          message.warning('请先上传图片');
-          setLoading(false);
-          return;
-        }
         await notesApi.createNoteWithTempFiles(resolvedTripId, {
           content: values.content,
           noteDate: values.noteDate.format('YYYY-MM-DD HH:mm:ss'),

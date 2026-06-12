@@ -8,15 +8,37 @@
 				placeholder="操作类型"
 				clearable
 				style="width: 140px"
+				:teleported="false"
 				@change="handleFilterChange"
 			>
-				<el-option label="全部操作" value="" />
-				<el-option label="禁用用户" value="user_disable" />
-				<el-option label="启用用户" value="user_enable" />
-				<el-option label="下架旅程" value="trip_takedown" />
-				<el-option label="恢复旅程" value="trip_restore" />
-				<el-option label="删除旅程" value="trip_delete" />
-				<el-option label="删除游记" value="note_delete" />
+				<el-option
+					label="全部操作"
+					value=""
+				/>
+				<el-option
+					label="禁用用户"
+					value="user_disable"
+				/>
+				<el-option
+					label="启用用户"
+					value="user_enable"
+				/>
+				<el-option
+					label="下架旅程"
+					value="trip_takedown"
+				/>
+				<el-option
+					label="恢复旅程"
+					value="trip_restore"
+				/>
+				<el-option
+					label="删除旅程"
+					value="trip_delete"
+				/>
+				<el-option
+					label="删除游记"
+					value="note_delete"
+				/>
 			</el-select>
 		</div>
 
@@ -96,10 +118,7 @@
 <script setup lang="ts">
 	import { ref, onMounted } from "vue";
 	import { ElMessage } from "element-plus";
-	import {
-		getOperationLogs,
-		type AdminOperationLog,
-	} from "../../api/admin";
+	import { getOperationLogs, type AdminOperationLog } from "../../api/admin";
 
 	const list = ref<AdminOperationLog[]>([]);
 	const loading = ref(false);
@@ -199,5 +218,14 @@
 			justify-content: center;
 			margin-top: 24px;
 		}
+	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .log-tab .tab-header h3 {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .log-tab .loading-state {
+		color: #bfbfbf !important;
 	}
 </style>

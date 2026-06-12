@@ -193,10 +193,7 @@
 		const valid = await formRef.value.validate().catch(() => false);
 		if (!valid) return;
 
-		if (!isEditing && tempFiles.value.length === 0) {
-			ElMessage.warning("请先上传图片");
-			return;
-		}
+		// 图片非必传，允许 tempFiles 为空
 
 		submitting.value = true;
 		try {
@@ -286,5 +283,26 @@
 	.dark-theme .note-form-page :deep(.el-textarea__inner) {
 		background-color: #2a2a2a !important;
 		color: #e8e8e8 !important;
+	}
+
+	/* 暗黑主题输入框适配 */
+	.dark-theme .note-form-page :deep(.el-input__wrapper) {
+		background-color: #2a2a2a !important;
+		box-shadow: 0 0 0 1px #3a3a3a inset !important;
+	}
+
+	.dark-theme .note-form-page :deep(.el-input__inner) {
+		color: #e8e8e8 !important;
+	}
+
+	/* 暗黑主题日期选择器 */
+	.dark-theme .note-form-page :deep(.el-date-editor .el-input__wrapper) {
+		background-color: #2a2a2a !important;
+		box-shadow: 0 0 0 1px #3a3a3a inset !important;
+	}
+
+	/* 暗黑主题表单标签 */
+	.dark-theme .note-form-page :deep(.el-form-item__label) {
+		color: #bfbfbf !important;
 	}
 </style>

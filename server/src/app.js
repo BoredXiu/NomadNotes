@@ -23,6 +23,7 @@ import geocodeRoutes from "./routes/geocode.js";
 import currencyRoutes from "./routes/currency.js";
 import searchRoutes from "./routes/search.js";
 import adminRoutes from "./routes/admin.js";
+import notificationRoutes from "./routes/notifications.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -116,6 +117,7 @@ app.use("/api/geocode", geocodeRoutes);
 app.use("/api/currency", currencyRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/api/health", async (_req, res) => {
 	try {

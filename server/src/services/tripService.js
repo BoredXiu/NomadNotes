@@ -131,8 +131,9 @@ async function updateTrip(tripId, userId, updateData) {
 		}
 	}
 
-	// 防护：禁止通过此接口直接设为公开，必须走审核流程
-	if (filteredData.isPublic === 1) {
+	// 防护：仅当旅程当前为私密(isPublic=0 或 null)且尝试设为公开时才拦截
+	// 已公开的旅程允许直接编辑其他字段
+	if (filteredData.isPublic === 1 && !trip.isPublic) {
 		throw new AppError("公开旅程需提交审核申请，请使用审核流程", 400);
 	}
 

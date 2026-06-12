@@ -1,11 +1,12 @@
 import AuditLog from "../models/AuditLog.js";
 import AdminOperationLog from "../models/AdminOperationLog.js";
+import Notification from "../models/Notification.js";
 import Trip from "../models/Trip.js";
 import User from "../models/User.js";
 import Expense from "../models/Expense.js";
 import Note from "../models/Note.js";
 import { AppError } from "../utils/AppError.js";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 
 /**
  * 管理员综合服务
@@ -26,7 +27,7 @@ async function submitAudit(tripId, userId) {
 		throw new AppError("无权操作该旅程", 403);
 	}
 
-	// 检查是否已有待审核的记录
+	// 检查是否已有待审核的记录（应用层预检，正常流程可拦截重复提交）
 	const existing = await AuditLog.findOne({
 		where: { tripId, status: "pending" },
 	});
@@ -34,11 +35,33 @@ async function submitAudit(tripId, userId) {
 		throw new AppError("该旅程已有待审核的公开申请，请勿重复提交", 409);
 	}
 
-	const auditLog = await AuditLog.create({
-		tripId,
-		userId,
-		status: "pending",
+	// 校验：至少需要有 1 条账单或 1 篇游记才能申请公开
+	const expenseCount = await Expense.count({ where: { tripId } });
+	const noteCount = await Note.count({ where: { tripId } });
+	if (expenseCount === 0 && noteCount === 0) {
+		throw new AppError("请先添加账单或游记后再申请公开", 400);
+	}
+
+	// 清理旧的已处理审核记录，避免 (tripId, status) 唯一索引冲突
+	// 当旅程重新提交审核时，之前 approved/rejected 的记录会与新 approved 冲突
+	await AuditLog.destroy({
+		where: { tripId, status: { [Op.in]: ["approved", "rejected"] } },
 	});
+
+	let auditLog;
+	try {
+		auditLog = await AuditLog.create({
+			tripId,
+			userId,
+			status: "pending",
+		});
+	} catch (err) {
+		// 数据库唯一约束兜底：并发场景下可能同时通过预检
+		if (err instanceof Sequelize.UniqueConstraintError) {
+			throw new AppError("该旅程已有待审核的公开申请，请勿重复提交", 409);
+		}
+		throw err;
+	}
 
 	return auditLog;
 }
@@ -92,12 +115,34 @@ async function approveAudit(auditId, adminId, adminName) {
 
 	await Trip.update({ isPublic: 1 }, { where: { id: auditLog.tripId } });
 
+	// 删除同旅程旧的已处理记录，避免 (tripId, status) 唯一索引冲突
+	// 当 approveAudit 将 pending 改为 approved 时，若存在同旅程旧的 approved 记录会报错
+	await AuditLog.destroy({
+		where: {
+			tripId: auditLog.tripId,
+			status: { [Op.in]: ["approved", "rejected"] },
+		},
+	});
+
 	await auditLog.update({
 		status: "approved",
 		reviewedBy: adminId,
 		reviewedByName: adminName,
 		reviewedAt: new Date(),
 		reason: null,
+	});
+
+	// 获取旅程信息以构造通知
+	const trip = await Trip.findByPk(auditLog.tripId, {
+		attributes: ["title"],
+	});
+	// 向旅程所有者发送审核通过通知
+	await Notification.create({
+		userId: auditLog.userId,
+		type: "audit_approved",
+		title: "旅程审核已通过",
+		content: trip ? `你的旅程"${trip.title}"已通过审核，现已公开发布` : "你的旅程已通过审核，现已公开发布",
+		tripId: auditLog.tripId,
 	});
 
 	return auditLog;
@@ -115,12 +160,33 @@ async function rejectAudit(auditId, adminId, adminName, reason) {
 		throw new AppError("该审核记录已处理", 409);
 	}
 
+	// 删除同旅程旧的已处理记录，避免 (tripId, status) 唯一索引冲突
+	await AuditLog.destroy({
+		where: {
+			tripId: auditLog.tripId,
+			status: { [Op.in]: ["approved", "rejected"] },
+		},
+	});
+
 	await auditLog.update({
 		status: "rejected",
 		reviewedBy: adminId,
 		reviewedByName: adminName,
 		reviewedAt: new Date(),
 		reason: reason || "未提供驳回理由",
+	});
+
+	// 获取旅程信息以构造通知
+	const trip = await Trip.findByPk(auditLog.tripId, {
+		attributes: ["title"],
+	});
+	// 向旅程所有者发送审核驳回通知
+	await Notification.create({
+		userId: auditLog.userId,
+		type: "audit_rejected",
+		title: "旅程审核未通过",
+		content: trip ? `你的旅程"${trip.title}"未通过审核，原因: ${reason || "未提供驳回理由"}` : `你的旅程未通过审核，原因: ${reason || "未提供驳回理由"}`,
+		tripId: auditLog.tripId,
 	});
 
 	return auditLog;

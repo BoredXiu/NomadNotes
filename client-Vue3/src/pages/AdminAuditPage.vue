@@ -430,4 +430,34 @@
 		justify-content: center;
 		margin-top: 24px;
 	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .audit-header h2 {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .loading-state {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .audit-card {
+		background-color: #1f1f1f !important;
+		border-color: #303030 !important;
+	}
+
+	.dark-theme .trip-info .trip-title {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .trip-info .trip-destination {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .user-info {
+		color: #bfbfbf !important;
+	}
+
+	.dark-theme .audit-result {
+		color: #bfbfbf !important;
+	}
 </style>

@@ -263,4 +263,13 @@
 			margin-top: 24px;
 		}
 	}
+
+	/* 暗黑主题支持 */
+	.dark-theme .user-tab .tab-header h3 {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .user-tab .loading-state {
+		color: #bfbfbf !important;
+	}
 </style>

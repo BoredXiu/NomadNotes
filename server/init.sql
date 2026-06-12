@@ -117,6 +117,8 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_audit_tripId (tripId),
     INDEX idx_audit_userId (userId),
+    -- 唯一索引：同一旅程同一状态只能有一条记录，防止并发重复提交
+    UNIQUE INDEX idx_audit_trip_status (tripId, status),
     INDEX idx_audit_status (status),
     INDEX idx_audit_reviewer (reviewedBy)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
@@ -160,7 +162,25 @@ CREATE TABLE IF NOT EXISTS admin_operation_logs (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ============================================================
--- 7. 系统配置表 (system_configs)
+-- 8. 通知表 (notifications)
+-- 用于向用户发送审核结果等系统通知
+-- ============================================================
+CREATE TABLE IF NOT EXISTS notifications (
+    id CHAR(36) NOT NULL PRIMARY KEY,
+    userId CHAR(36) NOT NULL COMMENT '接收通知的用户 ID, 逻辑关联 users 表',
+    type VARCHAR(30) NOT NULL COMMENT '通知类型: audit_approved, audit_rejected',
+    title VARCHAR(200) NOT NULL COMMENT '通知标题',
+    content TEXT NULL COMMENT '通知详情内容',
+    tripId CHAR(36) NULL COMMENT '关联旅程 ID, 逻辑关联 trips 表',
+    isRead TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否已读: 0 未读, 1 已读',
+    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_notify_user (userId),
+    INDEX idx_notify_read (userId, isRead),
+    INDEX idx_notify_createdAt (createdAt)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 9. 系统配置表 (system_configs)
 -- 存储系统级键值配置参数
 -- ============================================================
 CREATE TABLE IF NOT EXISTS system_configs (

@@ -24,6 +24,7 @@
 					v-model="format"
 					size="large"
 					style="flex: 1; min-width: 0; width: 10rem"
+					:teleported="false"
 				>
 					<el-option
 						v-for="opt in formatOptions"

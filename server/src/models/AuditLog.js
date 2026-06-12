@@ -60,6 +60,14 @@ const AuditLog = sequelize.define(
     {
         tableName: "audit_logs",
         timestamps: false,
+        indexes: [
+            {
+                // 唯一约束：同一旅程同一状态只能有一条记录
+                // 防止并发提交产生多条 pending 记录
+                unique: true,
+                fields: ["tripId", "status"],
+            },
+        ],
     },
 );
 
