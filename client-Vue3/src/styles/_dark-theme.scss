@@ -154,6 +154,17 @@
     }
   }
 
+  /* text 类型 + danger 变体：透明背景+红色文字，非实心红块 */
+  &--text.el-button--danger {
+    color: #ff7875 !important;
+    background-color: transparent !important;
+
+    &:hover {
+      color: #ff4d4f !important;
+      background-color: rgba(255, 77, 79, 0.1) !important;
+    }
+  }
+
   &--primary {
     background-color: $primary-color !important;
     border-color: $primary-color !important;
@@ -334,6 +345,12 @@
   &:focus {
     border-color: $primary-color !important;
   }
+}
+
+/* 暗黑主题字数统计 */
+.dark-theme .el-input__count {
+  color: #595959 !important;
+  background-color: transparent !important;
 }
 
 // ---- Select Input ----
@@ -913,5 +930,50 @@
     &:hover {
       color: $primary-color !important;
     }
+  }
+}
+
+// ---- 表单校验错误提示 ----
+.dark-theme .el-form-item__error {
+  color: #ff4d4f !important;
+}
+
+// ---- Upload 上传列表 ----
+.dark-theme .el-upload-list {
+  &__item {
+    background-color: $dark-bg-input !important;
+    border-color: $dark-border !important;
+    color: $dark-text-primary !important;
+
+    &:hover {
+      background-color: $dark-bg-hover !important;
+    }
+  }
+}
+
+// ---- Dropdown 下拉菜单 ----
+.dark-theme .el-dropdown-menu {
+  background-color: $dark-bg-input !important;
+  border-color: $dark-border !important;
+
+  &__item {
+    color: $dark-text-primary !important;
+
+    &:hover,
+    &.is-hovering {
+      background-color: $dark-bg-hover !important;
+      color: #fff !important;
+    }
+  }
+}
+
+// ---- 全局图标按钮（导航栏等）----
+.dark-theme .icon-btn {
+  background-color: transparent !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
   }
 }

@@ -449,13 +449,13 @@
 	}
 
 	/* 暗黑主题更换头像按钮 */
-	.dark-theme .profile-edit-avatar-upload :deep(.el-button--default) {
+	.dark-theme .profile-edit-avatar-upload :deep(.el-button) {
 		background-color: #2a2a2a !important;
 		border-color: #3a3a3a !important;
 		color: #e8e8e8 !important;
 	}
 
-	.dark-theme .profile-edit-avatar-upload :deep(.el-button--default:hover) {
+	.dark-theme .profile-edit-avatar-upload :deep(.el-button:hover) {
 		background-color: #3a3a3a !important;
 		border-color: #505050 !important;
 		color: #fff !important;
@@ -479,8 +479,21 @@
 	}
 
 	/* 暗黑主题 Select 选择器 */
+	.dark-theme .profile-edit-page :deep(.el-select) {
+		--el-select-input-focus-border-color: #667eea;
+	}
+
 	.dark-theme .profile-edit-page :deep(.el-select .el-input__wrapper) {
 		background-color: #2a2a2a !important;
+		box-shadow: 0 0 0 1px #3a3a3a inset !important;
+	}
+
+	.dark-theme .profile-edit-page :deep(.el-select .el-input__inner) {
+		color: #e8e8e8 !important;
+	}
+
+	.dark-theme .profile-edit-page :deep(.el-select .el-input__suffix) {
+		color: #bfbfbf !important;
 	}
 
 	.dark-theme .profile-edit-page :deep(.el-select-dropdown__item) {
@@ -550,5 +563,11 @@
 
 	.dark-theme .password-strength-text {
 		color: #bfbfbf !important;
+	}
+
+	/* 暗黑主题字数统计区域 */
+	.dark-theme .profile-edit-page :deep(.el-input__count) {
+		color: #595959 !important;
+		background-color: transparent !important;
 	}
 </style>

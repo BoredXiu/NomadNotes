@@ -272,6 +272,21 @@
 		align-items: center;
 	}
 
+	/* 铃铛图标按钮 - 强制透明背景 */
+	.icon-btn {
+		background-color: transparent !important;
+		border: none !important;
+		color: rgba(255, 255, 255, 0.85) !important;
+		padding: 0.5rem !important;
+		min-width: auto !important;
+		height: auto !important;
+	}
+
+	.icon-btn:hover {
+		background-color: rgba(255, 255, 255, 0.1) !important;
+		color: rgba(255, 255, 255, 0.95) !important;
+	}
+
 	.notification-popover {
 		max-height: 480px;
 		display: flex;
